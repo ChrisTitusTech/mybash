@@ -23,7 +23,7 @@ $docker_context\
 $time\
 [ ](fg:#33658A)\
 """
-
+command_timeout = 1000
 # Disable the blank line at the start of the prompt
 # add_newline = false
 
