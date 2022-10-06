@@ -589,7 +589,7 @@ lazyg() {
 
 alias cpu="grep 'cpu ' /proc/stat | awk '{usage=(\$2+\$4)*100/(\$2+\$4+\$5)} END {print usage}' | awk '{printf(\"%.1f\n\", \$1)}'"
 
-export PATH=$PATH:"/home/titus/.local/bin"
+export PATH=$PATH:"$HOME/.local/bin:$HOME/.cargo/bin"
 
 # Install Starship - curl -sS https://starship.rs/install.sh | sh
 
