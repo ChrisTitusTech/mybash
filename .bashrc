@@ -49,8 +49,8 @@ if [[ $iatest > 0 ]]; then bind "set completion-ignore-case on"; fi
 if [[ $iatest > 0 ]]; then bind "set show-all-if-ambiguous On"; fi
 
 # Set the default editor
-export EDITOR=nano
-export VISUAL=nano
+export EDITOR=vim
+export VISUAL=vim
 alias pico='edit'
 alias spico='sedit'
 alias nano='edit'
@@ -207,6 +207,8 @@ alias logs="sudo find /var/log -type f -exec file {} \; | grep 'text' | cut -d' 
 
 # SHA1
 alias sha1='openssl sha1'
+
+alias clickpaste='sleep 3; xdotool type "$(xclip -o -selection clipboard)"
 
 #######################################################
 # SPECIAL FUNCTIONS
