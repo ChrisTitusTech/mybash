@@ -49,12 +49,13 @@ if [[ $iatest > 0 ]]; then bind "set completion-ignore-case on"; fi
 if [[ $iatest > 0 ]]; then bind "set show-all-if-ambiguous On"; fi
 
 # Set the default editor
-export EDITOR=vim
-export VISUAL=vim
+export EDITOR=nvim
+export VISUAL=nvim
 alias pico='edit'
 alias spico='sedit'
 alias nano='edit'
 alias snano='sedit'
+alias vim='nvim'
 
 # To have colors for ls and all grep commands such as grep, egrep and zgrep
 export CLICOLOR=1
@@ -118,9 +119,9 @@ alias cls='clear'
 alias apt-get='sudo apt-get'
 alias multitail='multitail --no-repeat -c'
 alias freshclam='sudo freshclam'
-alias vi='vim'
+alias vi='nvim'
 alias svi='sudo vi'
-alias vis='vim "+set si"'
+alias vis='nvim "+set si"'
 
 # Change directory aliases
 alias home='cd ~'
@@ -225,7 +226,7 @@ edit ()
 	elif [ "$(type -t pico)" = "file" ]; then
 		pico "$@"
 	else
-		vim "$@"
+		nvim "$@"
 	fi
 }
 sedit ()
@@ -238,7 +239,7 @@ sedit ()
 	elif [ "$(type -t pico)" = "file" ]; then
 		sudo pico "$@"
 	else
-		sudo vim "$@"
+		sudo nvim "$@"
 	fi
 }
 
@@ -585,6 +586,7 @@ lazyg() {
 	git push
 }
 
+alias lookingglass="~/looking-glass-B5.0.1/client/build/looking-glass-client -F"
 #######################################################
 # Set the ultimate amazing command prompt
 #######################################################
