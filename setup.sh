@@ -7,7 +7,7 @@ GREEN='\e[32m'
 
 checkEnv(){
     ## Check if the current directory is writable.
-    GITPATH=$(pwd)
+    GITPATH="$(dirname "$(realpath "$0")")"
     if [[ ! -w ${GITPATH} ]];then
         echo -e "${RED}Can't write to ${GITPATH}${RC}"
         exit 1
