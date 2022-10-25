@@ -31,9 +31,15 @@ installDepend(){
     ## Check for dependencies.
     DEPENDENCIES='autojump bash bash-completion'
     echo -e "${YELLOW}Installing dependencies...${RC}"
-    sudo dpkg --configure -a
-    sudo apt-get install -fyq ${DEPENDENCIES}
-    sudo dpkg --configure -a
+    if [[  -x "/usr/bin/apt-get" ]]; then
+        sudo dpkg --configure -a
+        sudo apt-get install -fyq ${DEPENDENCIES}
+        sudo dpkg --configure -a
+    elif [[  -x "/usr/bin/yum" ]]; then
+        sudo yum install -fyq ${DEPENDENCIES}
+    else
+        echo "Can't check the package manager to use"
+    fi
 }
 
 installStarship(){
