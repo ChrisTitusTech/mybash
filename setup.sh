@@ -37,6 +37,12 @@ installDepend(){
 }
 
 installStarship(){
+    STARSHIP_CMD==$(which starship)
+    if [[ ! -z $STARSHIP_CMD ]]; then
+        echo "Starship already installed"
+        exit 0;
+    fi
+
     if ! curl -sS https://starship.rs/install.sh|sh;then
         echo -e "${RED}Something went wrong during starship install!${RC}"
         exit 1
