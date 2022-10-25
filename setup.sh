@@ -40,7 +40,7 @@ installStarship(){
     STARSHIP_CMD==$(which starship)
     if [[ ! -z $STARSHIP_CMD ]]; then
         echo "Starship already installed"
-        exit 0;
+        return
     fi
 
     if ! curl -sS https://starship.rs/install.sh|sh;then
