@@ -14,14 +14,14 @@ checkEnv(){
     fi
 
     ## Check for requirements.
-    REQUIREMENTS='curl apt groups sudo'
+    REQUIREMENTS='curl dnf groups sudo'
     if ! which ${REQUIREMENTS}>/dev/null;then
         echo -e "${RED}To run me, you need: ${REQUIREMENTS}${RC}"
         exit 1
     fi
 
     ## Check if member of the sudo group.
-    if ! groups|grep sudo>/dev/null;then
+    if ! groups|grep wheel>/dev/null;then
         echo -e "${RED}You need to be a member of the sudo group to run me!"
         exit 1
     fi
@@ -31,13 +31,11 @@ installDepend(){
     ## Check for dependencies.
     DEPENDENCIES='autojump bash bash-completion'
     echo -e "${YELLOW}Installing dependencies...${RC}"
-    sudo dpkg --configure -a
-    sudo apt-get install -fyq ${DEPENDENCIES}
-    sudo dpkg --configure -a
+    sudo dnf install -yq ${DEPENDENCIES}
 }
 
 installStarship(){
-    if ! curl -sS https://starship.rs/install.sh|sh;then
+    if ! curl -sS https://starship.rs/install.sh|sudo sh;then
         echo -e "${RED}Something went wrong during starship install!${RC}"
         exit 1
     fi
