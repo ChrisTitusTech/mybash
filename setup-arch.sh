@@ -29,7 +29,7 @@ checkEnv(){
 
 installDepend(){
     ## Check for dependencies.
-    # For some reason, if I put autojump in the original DEPENCENCIES variable, 
+    # For some reason, if I put autojump in the original DEPENDENCIES variable, 
     # it skips the installation and just does bash and bash completion. So I
     # put autojump in a separate variable and separate yay command.
     DEPENDENCIES1='bash bash-completion'
