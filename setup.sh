@@ -32,7 +32,7 @@ checkEnv() {
     ## Check SuperUser Group
     SUPERUSERGROUP='wheel sudo'
     for sug in ${SUPERUSERGROUP}; do
-        if which ${sug} >/dev/null; then
+        if groups | grep ${sug}; then
             SUGROUP=${sug}
             echo -e "Super user group ${SUGROUP}"
         fi
