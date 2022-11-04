@@ -14,7 +14,7 @@ checkEnv(){
     fi
 
     ## Check for requirements.
-    REQUIREMENTS='curl apt groups sudo'
+    REQUIREMENTS='curl groups sudo'
     if ! which ${REQUIREMENTS}>/dev/null;then
         echo -e "${RED}To run me, you need: ${REQUIREMENTS}${RC}"
         exit 1
@@ -25,20 +25,24 @@ checkEnv(){
         echo -e "${RED}You need to be a member of the sudo group to run me!"
         exit 1
     fi
+
+    if [[ ! -x "/usr/bin/apt-get" ]] || [[ ! -x "/usr/bin/yum" ]]; then
+        echo -e "Can't find a supported package manager"
+        exit 1
+    fi
+    
 }
 
 installDepend(){
     ## Check for dependencies.
-    DEPENDENCIES='autojump bash bash-completion'
+    DEPENDENCIES='autojump bash bash-completion tar neovim'
     echo -e "${YELLOW}Installing dependencies...${RC}"
     if [[  -x "/usr/bin/apt-get" ]]; then
         sudo dpkg --configure -a
         sudo apt-get install -fyq ${DEPENDENCIES}
         sudo dpkg --configure -a
     elif [[  -x "/usr/bin/yum" ]]; then
-        sudo yum install -fyq ${DEPENDENCIES}
-    else
-        echo "Can't check the package manager to use"
+        sudo yum install -yq ${DEPENDENCIES}
     fi
 }
 
