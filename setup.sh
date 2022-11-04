@@ -26,7 +26,7 @@ checkEnv(){
         exit 1
     fi
 
-    if [[ ! -x "/usr/bin/apt-get" ]] && [[ ! -x "/usr/bin/yum" ]]; then
+    if [[ ! -x "/usr/bin/apt-get" ]] && [[ ! -x "/usr/bin/yum" ]] && [[ ! -x "/usr/bin/dnf" ]]; then
         echo -e "Can't find a supported package manager"
         exit 1
     fi
@@ -43,6 +43,8 @@ installDepend(){
         sudo dpkg --configure -a
     elif [[  -x "/usr/bin/yum" ]]; then
         sudo yum install -yq ${DEPENDENCIES}
+    elif [[  -x "/usr/bin/dnf" ]]; then
+        sudo dnf install -yq ${DEPENDENCIES}
     fi
 }
 
