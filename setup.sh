@@ -26,7 +26,7 @@ checkEnv(){
         exit 1
     fi
 
-    if [[ ! -x "/usr/bin/apt-get" ]] || [[ ! -x "/usr/bin/yum" ]]; then
+    if [[ ! -x "/usr/bin/apt-get" ]] && [[ ! -x "/usr/bin/yum" ]]; then
         echo -e "Can't find a supported package manager"
         exit 1
     fi
