@@ -43,17 +43,29 @@ checkEnv() {
         echo -e "${RED}You need to be a member of the sudo group to run me!"
         exit 1
     fi
+
+    if [[ ! -x "/usr/bin/apt-get" ]] && [[ ! -x "/usr/bin/yum" ]] && [[ ! -x "/usr/bin/dnf" ]]; then
+        echo -e "Can't find a supported package manager"
+        exit 1
+    fi
+    
 }
 
 installDepend() {
     ## Check for dependencies.
-    DEPENDENCIES='autojump bash bash-completion'
+    DEPENDENCIES='autojump bash bash-completion tar neovim'
     echo -e "${YELLOW}Installing dependencies...${RC}"
     sudo ${PACKAGER} install -yq ${DEPENDENCIES}
 }
 
-installStarship() {
-    if ! curl -sS https://starship.rs/install.sh | sudo sh; then
+installStarship(){
+    STARSHIP_CMD==$(which starship)
+    if [[ ! -z $STARSHIP_CMD ]]; then
+        echo "Starship already installed"
+        return
+    fi
+
+    if ! curl -sS https://starship.rs/install.sh|sh;then
         echo -e "${RED}Something went wrong during starship install!${RC}"
         exit 1
     fi
