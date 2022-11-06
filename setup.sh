@@ -6,8 +6,15 @@ YELLOW='\e[33m'
 GREEN='\e[32m'
 
 checkEnv() {
+    ## Check for requirements.
+    REQUIREMENTS='curl groups sudo which'
+    if ! which ${REQUIREMENTS} >/dev/null; then
+        echo -e "${RED}To run me, you need: ${REQUIREMENTS}${RC}"
+        exit 1
+    fi
+
     ## Check Package Handeler
-    PACKAGEMANAGER='apt dnf'
+    PACKAGEMANAGER='apt dnf pacman'
     for pgm in ${PACKAGEMANAGER}; do
         if which ${pgm} >/dev/null; then
             PACKAGER=${pgm}
@@ -25,13 +32,6 @@ checkEnv() {
     GITPATH="$(dirname "$(realpath "$0")")"
     if [[ ! -w ${GITPATH} ]]; then
         echo -e "${RED}Can't write to ${GITPATH}${RC}"
-        exit 1
-    fi
-
-    ## Check for requirements.
-    REQUIREMENTS='curl groups sudo'
-    if ! which ${REQUIREMENTS} >/dev/null; then
-        echo -e "${RED}To run me, you need: ${REQUIREMENTS}${RC}"
         exit 1
     fi
 
@@ -56,7 +56,18 @@ installDepend() {
     ## Check for dependencies.
     DEPENDENCIES='autojump bash bash-completion tar neovim'
     echo -e "${YELLOW}Installing dependencies...${RC}"
-    sudo ${PACKAGER} install -yq ${DEPENDENCIES}
+    if [[ $PACKAGER -eq "pacman" ]]; then
+        YAY_CMD==$(which yay)
+        if [[ -z $YAY_CMD ]]; then
+            echo "Installing yay..."
+            sudo ${PACKAGER} --noconfirm -S base-devel
+            $(cd /opt && sudo git clone https://aur.archlinux.org/yay-git.git && sudo chown -R ${USER}:${USER} ./yay-git)
+            makepkg -si
+        fi
+    	sudo yay --noconfirm -S ${DEPENDENCIES}
+    else 
+    	sudo ${PACKAGER} install -yq ${DEPENDENCIES}
+    fi
 }
 
 installStarship(){
