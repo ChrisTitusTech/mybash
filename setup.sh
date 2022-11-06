@@ -15,6 +15,12 @@ checkEnv() {
         fi
     done
 
+    if [ -z "${PACKAGER}" ]; then
+        echo -e "${RED}Can't find a supported package manager"
+        exit 1
+    fi
+
+
     ## Check if the current directory is writable.
     GITPATH="$(dirname "$(realpath "$0")")"
     if [[ ! -w ${GITPATH} ]]; then
@@ -41,11 +47,6 @@ checkEnv() {
     ## Check if member of the sudo group.
     if ! groups | grep ${SUGROUP} >/dev/null; then
         echo -e "${RED}You need to be a member of the sudo group to run me!"
-        exit 1
-    fi
-
-    if [[ ! -x "/usr/bin/apt-get" ]] && [[ ! -x "/usr/bin/yum" ]] && [[ ! -x "/usr/bin/dnf" ]]; then
-        echo -e "Can't find a supported package manager"
         exit 1
     fi
     
