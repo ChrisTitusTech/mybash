@@ -64,8 +64,7 @@ installDepend() {
         if ! command_exists yay; then
             echo "Installing yay..."
             sudo ${PACKAGER} --noconfirm -S base-devel
-            $(cd /opt && sudo git clone https://aur.archlinux.org/yay-git.git && sudo chown -R ${USER}:${USER} ./yay-git)
-            makepkg -si
+            $(cd /opt && sudo git clone https://aur.archlinux.org/yay-git.git && sudo chown -R ${USER}:${USER} ./yay-git && cd yay-git && makepkg -si)
         else
             echo "Command yay already installed"
         fi
