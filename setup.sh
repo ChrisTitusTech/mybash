@@ -60,7 +60,7 @@ installDepend() {
     ## Check for dependencies.
     DEPENDENCIES='autojump bash bash-completion tar neovim'
     echo -e "${YELLOW}Installing dependencies...${RC}"
-    if [[ $PACKAGER -eq "pacman" ]]; then
+    if [[ $PACKAGER == "pacman" ]]; then
         if ! command_exists yay; then
             echo "Installing yay..."
             sudo ${PACKAGER} --noconfirm -S base-devel
