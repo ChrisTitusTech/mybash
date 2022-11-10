@@ -5,10 +5,14 @@ RED='\e[31m'
 YELLOW='\e[33m'
 GREEN='\e[32m'
 
+command_exists () {
+    command -v $1 >/dev/null 2>&1;
+}
+
 checkEnv() {
     ## Check for requirements.
-    REQUIREMENTS='curl groups sudo which'
-    if ! which ${REQUIREMENTS} >/dev/null; then
+    REQUIREMENTS='curl groups sudo'
+    if ! command_exists ${REQUIREMENTS}; then
         echo -e "${RED}To run me, you need: ${REQUIREMENTS}${RC}"
         exit 1
     fi
@@ -16,7 +20,7 @@ checkEnv() {
     ## Check Package Handeler
     PACKAGEMANAGER='apt dnf pacman'
     for pgm in ${PACKAGEMANAGER}; do
-        if which ${pgm} >/dev/null; then
+        if command_exists ${pgm}; then
             PACKAGER=${pgm}
             echo -e "Using ${pgm}"
         fi
@@ -57,22 +61,22 @@ installDepend() {
     DEPENDENCIES='autojump bash bash-completion tar neovim'
     echo -e "${YELLOW}Installing dependencies...${RC}"
     if [[ $PACKAGER -eq "pacman" ]]; then
-        YAY_CMD==$(which yay)
-        if [[ -z $YAY_CMD ]]; then
+        if ! command_exists yay; then
             echo "Installing yay..."
             sudo ${PACKAGER} --noconfirm -S base-devel
             $(cd /opt && sudo git clone https://aur.archlinux.org/yay-git.git && sudo chown -R ${USER}:${USER} ./yay-git)
             makepkg -si
+        else
+            echo "Command yay already installed"
         fi
-    	sudo yay --noconfirm -S ${DEPENDENCIES}
+    	yay --noconfirm -S ${DEPENDENCIES}
     else 
     	sudo ${PACKAGER} install -yq ${DEPENDENCIES}
     fi
 }
 
 installStarship(){
-    STARSHIP_CMD==$(which starship)
-    if [[ ! -z $STARSHIP_CMD ]]; then
+    if command_exists starship; then
         echo "Starship already installed"
         return
     fi
