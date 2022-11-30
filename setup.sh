@@ -5,27 +5,37 @@ RED='\e[31m'
 YELLOW='\e[33m'
 GREEN='\e[32m'
 
+command_exists () {
+    command -v $1 >/dev/null 2>&1;
+}
+
 checkEnv() {
+    ## Check for requirements.
+    REQUIREMENTS='curl groups sudo'
+    if ! command_exists ${REQUIREMENTS}; then
+        echo -e "${RED}To run me, you need: ${REQUIREMENTS}${RC}"
+        exit 1
+    fi
+
     ## Check Package Handeler
-    PACKAGEMANAGER='apt dnf'
+    PACKAGEMANAGER='apt dnf pacman'
     for pgm in ${PACKAGEMANAGER}; do
-        if which ${pgm} >/dev/null; then
+        if command_exists ${pgm}; then
             PACKAGER=${pgm}
             echo -e "Using ${pgm}"
         fi
     done
 
+    if [ -z "${PACKAGER}" ]; then
+        echo -e "${RED}Can't find a supported package manager"
+        exit 1
+    fi
+
+
     ## Check if the current directory is writable.
     GITPATH="$(dirname "$(realpath "$0")")"
     if [[ ! -w ${GITPATH} ]]; then
         echo -e "${RED}Can't write to ${GITPATH}${RC}"
-        exit 1
-    fi
-
-    ## Check for requirements.
-    REQUIREMENTS='curl groups sudo'
-    if ! which ${REQUIREMENTS} >/dev/null; then
-        echo -e "${RED}To run me, you need: ${REQUIREMENTS}${RC}"
         exit 1
     fi
 
@@ -43,11 +53,6 @@ checkEnv() {
         echo -e "${RED}You need to be a member of the sudo group to run me!"
         exit 1
     fi
-
-    if [[ ! -x "/usr/bin/apt-get" ]] && [[ ! -x "/usr/bin/yum" ]] && [[ ! -x "/usr/bin/dnf" ]]; then
-        echo -e "Can't find a supported package manager"
-        exit 1
-    fi
     
 }
 
@@ -55,12 +60,22 @@ installDepend() {
     ## Check for dependencies.
     DEPENDENCIES='autojump bash bash-completion tar neovim'
     echo -e "${YELLOW}Installing dependencies...${RC}"
-    sudo ${PACKAGER} install -yq ${DEPENDENCIES}
+    if [[ $PACKAGER == "pacman" ]]; then
+        if ! command_exists yay; then
+            echo "Installing yay..."
+            sudo ${PACKAGER} --noconfirm -S base-devel
+            $(cd /opt && sudo git clone https://aur.archlinux.org/yay-git.git && sudo chown -R ${USER}:${USER} ./yay-git && cd yay-git && makepkg --noconfirm -si)
+        else
+            echo "Command yay already installed"
+        fi
+    	yay --noconfirm -S ${DEPENDENCIES}
+    else 
+    	sudo ${PACKAGER} install -yq ${DEPENDENCIES}
+    fi
 }
 
 installStarship(){
-    STARSHIP_CMD==$(which starship)
-    if [[ ! -z $STARSHIP_CMD ]]; then
+    if command_exists starship; then
         echo "Starship already installed"
         return
     fi
