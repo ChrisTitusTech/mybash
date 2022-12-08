@@ -22,7 +22,7 @@ fi
 #######################################################
 
 # Disable the bell
-if [[ $iatest > 0 ]]; then bind "set bell-style visible"; fi
+if [[ $iatest -gt 0 ]]; then bind "set bell-style visible"; fi
 
 # Expand the history size
 export HISTFILESIZE=10000
@@ -43,10 +43,10 @@ PROMPT_COMMAND='history -a'
 
 # Ignore case on auto-completion
 # Note: bind used instead of sticking these in .inputrc
-if [[ $iatest > 0 ]]; then bind "set completion-ignore-case on"; fi
+if [[ $iatest -gt 0 ]]; then bind "set completion-ignore-case on"; fi
 
 # Show auto-completion list automatically, without double tab
-if [[ $iatest > 0 ]]; then bind "set show-all-if-ambiguous On"; fi
+if [[ $iatest -gt 0 ]]; then bind "set show-all-if-ambiguous On"; fi
 
 # Set the default editor
 export EDITOR=nvim
@@ -91,7 +91,7 @@ alias web='cd /var/www/html'
 #######################################################
 # GENERAL ALIAS'S
 #######################################################
-# To temporarily bypass an alias, we preceed the command with a \
+# To temporarily bypass an alias, we precede the command with a \
 # EG: the ls command is aliased, but to use the normal ls command you would type \ls
 
 # Add an "alert" alias for long running commands.  Use like so:
@@ -110,7 +110,7 @@ alias da='date "+%Y-%m-%d %A %T %Z"'
 # Alias's to modified commands
 alias cp='cp -i'
 alias mv='mv -i'
-alias rm='rm -iv'
+alias rm='trash -v'
 alias mkdir='mkdir -p'
 alias ps='ps auxf'
 alias ping='ping -c 10'
@@ -177,9 +177,6 @@ alias countfiles="for t in files links directories; do echo \`find . -type \${t:
 # To see if a command is aliased, a file, or a built-in command
 alias checkcommand="type -t"
 
-# Show current network connections to the server
-alias ipview="netstat -anpl | grep :80 | awk {'print \$5'} | cut -d\":\" -f1 | sort | uniq -c | sort -n | sed -e 's/^ *//' -e 's/ *\$//'"
-
 # Show open ports
 alias openports='netstat -nape --inet'
 
@@ -245,8 +242,8 @@ sedit ()
 
 # Extracts any archive(s) (if unp isn't installed)
 extract () {
-	for archive in $*; do
-		if [ -f $archive ] ; then
+	for archive in "$@"; do
+		if [ -f "$archive" ] ; then
 			case $archive in
 				*.tar.bz2)   tar xvjf $archive    ;;
 				*.tar.gz)    tar xvzf $archive    ;;
@@ -298,16 +295,16 @@ cpp()
 				printf "]\r"
 			}
 		}
-	END { print "" }' total_size=$(stat -c '%s' "${1}") count=0
+	END { print "" }' total_size="$(stat -c '%s' "${1}")" count=0
 }
 
 # Copy and go to the directory
 cpg ()
 {
 	if [ -d "$2" ];then
-		cp $1 $2 && cd $2
+		cp "$1" "$2" && cd "$2"
 	else
-		cp $1 $2
+		cp "$1" "$2"
 	fi
 }
 
@@ -315,17 +312,17 @@ cpg ()
 mvg ()
 {
 	if [ -d "$2" ];then
-		mv $1 $2 && cd $2
+		mv "$1" "$2" && cd "$2"
 	else
-		mv $1 $2
+		mv "$1" "$2"
 	fi
 }
 
 # Create and go to the directory
 mkdirg ()
 {
-	mkdir -p $1
-	cd $1
+	mkdir -p "$1"
+	cd "$1"
 }
 
 # Goes up a specified number of directories  (i.e. up 4)
@@ -569,7 +566,7 @@ rot13 () {
 # Trim leading and trailing spaces (for scripts)
 trim()
 {
-	local var=$@
+	local var=$*
 	var="${var#"${var%%[![:space:]]*}"}"  # remove leading whitespace characters
 	var="${var%"${var##*[![:space:]]}"}"  # remove trailing whitespace characters
 	echo -n "$var"
@@ -591,7 +588,7 @@ alias lookingglass="~/looking-glass-B5.0.1/client/build/looking-glass-client -F"
 # Set the ultimate amazing command prompt
 #######################################################
 
-alias cpu="grep 'cpu ' /proc/stat | awk '{usage=(\$2+\$4)*100/(\$2+\$4+\$5)} END {print usage}' | awk '{printf(\"%.1f\n\", \$1)}'"
+alias hug="hugo server -F --bind=10.0.0.210 --baseURL=http://10.0.0.210"
 
 export PATH=$PATH:"$HOME/.local/bin:$HOME/.cargo/bin"
 
