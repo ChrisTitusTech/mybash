@@ -208,6 +208,10 @@ alias sha1='openssl sha1'
 
 alias clickpaste='sleep 3; xdotool type "$(xclip -o -selection clipboard)"'
 
+# KITTY - alias to be able to use kitty features when connecting to remote servers(e.g use tmux on remote server)
+
+alias kssh="kitty +kitten ssh"
+
 #######################################################
 # SPECIAL FUNCTIONS
 #######################################################
