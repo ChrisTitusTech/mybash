@@ -34,9 +34,11 @@ installDepend(){
     # put autojump in a separate variable and separate yay command.
     DEPENDENCIES1='bash bash-completion'
     DEPENDENCIES2='autojump'
+    DEPENDENCIES2='autojump-git'
     echo -e "${YELLOW}Installing dependencies...${RC}"
     yay -S ${DEPENDENCIES1}
     yay -S ${DEPENDENCIES2}
+    yay -S ${DEPENDENCIES3}
     sudo mkdir /usr/local/bin/autojump
     sudo ln -s /etc/profile.d/autojump.sh /usr/share/autojump/autojump.sh
 }
