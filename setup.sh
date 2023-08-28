@@ -40,7 +40,7 @@ checkEnv() {
     fi
 
     ## Check SuperUser Group
-    SUPERUSERGROUP='wheel sudo'
+    SUPERUSERGROUP='wheel sudo root'
     for sug in ${SUPERUSERGROUP}; do
         if groups | grep ${sug}; then
             SUGROUP=${sug}
