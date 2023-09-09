@@ -18,7 +18,7 @@ checkEnv() {
     fi
 
     ## Check Package Handeler
-    PACKAGEMANAGER='apt dnf pacman'
+    PACKAGEMANAGER='apt yum dnf pacman'
     for pgm in ${PACKAGEMANAGER}; do
         if command_exists ${pgm}; then
             PACKAGER=${pgm}
@@ -40,7 +40,7 @@ checkEnv() {
     fi
 
     ## Check SuperUser Group
-    SUPERUSERGROUP='wheel sudo'
+    SUPERUSERGROUP='wheel sudo root'
     for sug in ${SUPERUSERGROUP}; do
         if groups | grep ${sug}; then
             SUGROUP=${sug}
@@ -58,7 +58,7 @@ checkEnv() {
 
 installDepend() {
     ## Check for dependencies.
-    DEPENDENCIES='autojump bash bash-completion tar neovim'
+    DEPENDENCIES='autojump bash bash-completion tar neovim bat'
     echo -e "${YELLOW}Installing dependencies...${RC}"
     if [[ $PACKAGER == "pacman" ]]; then
         if ! command_exists yay; then
@@ -87,11 +87,13 @@ installStarship(){
 }
 
 linkConfig() {
+    ## Get the correct user home directory.
+    USER_HOME=$(getent passwd ${SUDO_USER:-$USER} | cut -d: -f6)
     ## Check if a bashrc file is already there.
-    OLD_BASHRC="${HOME}/.bashrc"
+    OLD_BASHRC="${USER_HOME}/.bashrc"
     if [[ -e ${OLD_BASHRC} ]]; then
-        echo -e "${YELLOW}Moving old bash config file to ${HOME}/.bashrc.bak${RC}"
-        if ! mv ${OLD_BASHRC} ${HOME}/.bashrc.bak; then
+        echo -e "${YELLOW}Moving old bash config file to ${USER_HOME}/.bashrc.bak${RC}"
+        if ! mv ${OLD_BASHRC} ${USER_HOME}/.bashrc.bak; then
             echo -e "${RED}Can't move the old bash config file!${RC}"
             exit 1
         fi
@@ -99,8 +101,8 @@ linkConfig() {
 
     echo -e "${YELLOW}Linking new bash config file...${RC}"
     ## Make symbolic link.
-    ln -svf ${GITPATH}/.bashrc ${HOME}/.bashrc
-    ln -svf ${GITPATH}/starship.toml ${HOME}/.config/starship.toml
+    ln -svf ${GITPATH}/.bashrc ${USER_HOME}/.bashrc
+    ln -svf ${GITPATH}/starship.toml ${USER_HOME}/.config/starship.toml
 }
 
 checkEnv
