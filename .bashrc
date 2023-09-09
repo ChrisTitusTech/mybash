@@ -586,7 +586,58 @@ lazyg() {
 	git commit -m "$1"
 	git push
 }
+_z_cd() {
+    cd "$@" || return "$?"
 
+    if [ "$_ZO_ECHO" = "1" ]; then
+        echo "$PWD"
+    fi
+}
+
+z() {
+    if [ "$#" -eq 0 ]; then
+        _z_cd ~
+    elif [ "$#" -eq 1 ] && [ "$1" = '-' ]; then
+        if [ -n "$OLDPWD" ]; then
+            _z_cd "$OLDPWD"
+        else
+            echo 'zoxide: $OLDPWD is not set'
+            return 1
+        fi
+    else
+        _zoxide_result="$(zoxide query -- "$@")" && _z_cd "$_zoxide_result"
+    fi
+}
+
+zi() {
+    _zoxide_result="$(zoxide query -i -- "$@")" && _z_cd "$_zoxide_result"
+}
+
+
+alias za='zoxide add'
+
+alias zq='zoxide query'
+alias zqi='zoxide query -i'
+
+alias zr='zoxide remove'
+zri() {
+    _zoxide_result="$(zoxide query -i -- "$@")" && zoxide remove "$_zoxide_result"
+}
+
+
+_zoxide_hook() {
+    if [ -z "${_ZO_PWD}" ]; then
+        _ZO_PWD="${PWD}"
+    elif [ "${_ZO_PWD}" != "${PWD}" ]; then
+        _ZO_PWD="${PWD}"
+        zoxide add "$(pwd -L)"
+    fi
+}
+
+case "$PROMPT_COMMAND" in
+    *_zoxide_hook*) ;;
+    *) PROMPT_COMMAND="_zoxide_hook${PROMPT_COMMAND:+;${PROMPT_COMMAND}}" ;;
+esac
 alias lookingglass="~/looking-glass-B5.0.1/client/build/looking-glass-client -F"
 #######################################################
 # Set the ultimate amazing command prompt
@@ -594,7 +645,7 @@ alias lookingglass="~/looking-glass-B5.0.1/client/build/looking-glass-client -F"
 
 alias hug="hugo server -F --bind=10.0.0.210 --baseURL=http://10.0.0.210"
 
-export PATH=$PATH:"$HOME/.local/bin:$HOME/.cargo/bin"
+export PATH=$PATH:"$HOME/.local/bin:$HOME/.cargo/bin:/var/lib/flatpak/exports/bin:/.local/share/flatpak/exports/bin"
 
 # Install Starship - curl -sS https://starship.rs/install.sh | sh
 
