@@ -56,7 +56,17 @@ alias spico='sedit'
 alias nano='edit'
 alias snano='sedit'
 alias vim='nvim'
-alias cat='batcat'
+
+# Replace batcat with cat on Fedora as batcat is not available as a RPM in any form
+if command -v lsb_release > /dev/null; then
+    DISTRIBUTION=$(lsb_release -si)
+
+    if [ "$DISTRIBUTION" = "Fedora" ]; then
+        alias cat='bat'
+    else
+        alias cat='batcat'
+    fi
+fi
 
 # To have colors for ls and all grep commands such as grep, egrep and zgrep
 export CLICOLOR=1
