@@ -1,5 +1,16 @@
 #!/bin/bash
 
+bashrc_file="$HOME/.bashrc"
+
+# Check if ~/.bashrc exists
+if [ -e "$bashrc_file" ]; then
+    # Remove ~/.bashrc
+    rm "$bashrc_file"
+    echo "Deleted existing ~/.bashrc file."
+else
+    echo "No existing ~/.bashrc file found."
+fi
+
 RC='\e[0m'
 RED='\e[31m'
 YELLOW='\e[33m'
@@ -108,6 +119,80 @@ linkConfig() {
 checkEnv
 installDepend
 installStarship
+
+echo -e "Setting MesloLGMNerdFontMono font for the terminal"
+# Set the path to your MesloLGM Nerd Font
+font_path="font/MesloLGMNerdFontMono-Regular.ttf"
+
+#!/bin/bash
+
+# Function to check if a command is available
+command_exists() {
+  command -v "$1" >/dev/null 2>&1
+}
+
+# Function to update font settings for GNOME Terminal
+update_gnome_terminal() {
+  profile_id=$(gsettings get org.gnome.Terminal.ProfilesList default | tr -d "'")
+  gsettings set org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$profile_id/ font 'MesloLGM Nerd Font 12'
+  gsettings set org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$profile_id/ use-system-font false
+}
+
+
+update_xfce_terminal() {
+  xfce_config_file="$HOME/.config/xfce4/terminal/terminalrc"
+  font_name="MesloLGM Nerd Font Mono 12"
+  
+  # Backup the existing configuration file
+  cp "$xfce_config_file" "$xfce_config_file.backup"
+
+  # Set the font property
+  sed -i "s@^FontName=.*@FontName=$font_name@" "$xfce_config_file"
+}
+
+# Function to install the font
+install_font() {
+  font_file="font/MesloLGMNerdFontMono-Regular.ttf"
+  install_path="$HOME/.fonts"
+
+  # Create the font directory if it doesn't exist
+  mkdir -p "$install_path"
+
+  # Check if font file exists
+  if [ -e "$font_file" ]; then
+    # Copy the font file to the user font directory
+    cp "$font_file" "$install_path"
+    
+    # Update the font cache
+    fc-cache -fv
+  else
+    echo "Font file '$font_file' not found. Please provide the correct path."
+  fi
+}
+# Function to install zoxide
+install_zoxide() {
+  sudo apt update
+  echo -e "${YELLOW}Installing zoxide..${RC}"
+  sudo apt install zoxide
+}
+
+# Check which terminal is available
+if command_exists gnome-terminal; then
+  echo "Detected GNOME Terminal."
+  update_gnome_terminal
+elif command_exists xfce4-terminal; then
+  echo "Detected XFCE Terminal."
+  update_xfce_terminal
+else
+  echo "Unsupported terminal. Font settings not updated."
+fi
+
+
+#install font
+install_font
+# Install zoxide
+install_zoxide
+
 if linkConfig; then
     echo -e "${GREEN}Done!\nrestart your shell to see the changes.${RC}"
 else
