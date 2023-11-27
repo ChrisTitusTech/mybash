@@ -4,6 +4,11 @@ bashrc_file="$HOME/.bashrc"
 
 # Check if ~/.bashrc exists
 if [ -e "$bashrc_file" ]; then
+    # Backup existing ~/.bashrc
+    backup_file="$HOME/.bashrc_backup_$(date +%Y%m%d%H%M%S)"
+    cp "$bashrc_file" "$backup_file"
+    echo "Backup created: $backup_file"
+
     # Remove ~/.bashrc
     rm "$bashrc_file"
     echo "Deleted existing ~/.bashrc file."
