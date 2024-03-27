@@ -5,8 +5,8 @@ RED='\e[31m'
 YELLOW='\e[33m'
 GREEN='\e[32m'
 
-command_exists () {
-    command -v $1 >/dev/null 2>&1;
+command_exists() {
+    command -v $1 >/dev/null 2>&1
 }
 
 checkEnv() {
@@ -31,7 +31,6 @@ checkEnv() {
         exit 1
     fi
 
-
     ## Check if the current directory is writable.
     GITPATH="$(dirname "$(realpath "$0")")"
     if [[ ! -w ${GITPATH} ]]; then
@@ -53,7 +52,7 @@ checkEnv() {
         echo -e "${RED}You need to be a member of the sudo group to run me!"
         exit 1
     fi
-    
+
 }
 
 installDepend() {
@@ -68,22 +67,45 @@ installDepend() {
         else
             echo "Command yay already installed"
         fi
-    	yay --noconfirm -S ${DEPENDENCIES}
-    else 
-    	sudo ${PACKAGER} install -yq ${DEPENDENCIES}
+        yay --noconfirm -S ${DEPENDENCIES}
+    else
+        sudo ${PACKAGER} install -yq ${DEPENDENCIES}
     fi
 }
 
-installStarship(){
+installStarship() {
     if command_exists starship; then
         echo "Starship already installed"
         return
     fi
 
-    if ! curl -sS https://starship.rs/install.sh|sh;then
+    if ! curl -sS https://starship.rs/install.sh | sh; then
         echo -e "${RED}Something went wrong during starship install!${RC}"
         exit 1
     fi
+    if command_exists fzf; then
+        echo "Fzf already installed"
+    else
+        git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
+        ~/.fzf/install
+    fi
+}
+
+installZoxide() {
+    if command_exists zoxide; then
+        echo "Zoxide already installed"
+        return
+    fi
+
+    if ! curl -sS https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | sh; then
+        echo -e "${RED}Something went wrong during zoxide install!${RC}"
+        exit 1
+    fi
+}
+
+install_additional_dependencies() {
+   sudo apt update
+   sudo apt install -y trash-cli bat meld jpico
 }
 
 linkConfig() {
@@ -108,6 +130,9 @@ linkConfig() {
 checkEnv
 installDepend
 installStarship
+installZoxide
+install_additional_dependencies
+
 if linkConfig; then
     echo -e "${GREEN}Done!\nrestart your shell to see the changes.${RC}"
 else
