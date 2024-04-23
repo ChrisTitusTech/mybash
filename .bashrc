@@ -1,124 +1,67 @@
-#!/bin/bash
-iatest=$(expr index "$-" i)
 
-#######################################################
-# SOURCED ALIAS'S AND SCRIPTS BY zachbrowne.me
-#######################################################
 
-# Source global definitions
-if [ -f /etc/bashrc ]; then
-	. /etc/bashrc
+# Path Customization
+if [ -d "$HOME/.bin" ]; then
+  PATH="$HOME/.bin:$PATH"
 fi
 
-# Enable bash programmable completion features in interactive shells
-if [ -f /usr/share/bash-completion/bash_completion ]; then
-	. /usr/share/bash-completion/bash_completion
-elif [ -f /etc/bash_completion ]; then
-	. /etc/bash_completion
+if [ -d "$HOME/.local/bin" ]; then
+# Sourcing custom settings
+if [[ -r ~/.bash-default ]]; then
+  source ~/.bash-default
+else
+  echo "Error: Can't find the bash-default script"
 fi
 
-#######################################################
-# EXPORTS
-#######################################################
-
-# Disable the bell
-if [[ $iatest -gt 0 ]]; then bind "set bell-style visible"; fi
-
-# Expand the history size
-export HISTFILESIZE=10000
-export HISTSIZE=500
-
-# Don't put duplicate lines in the history and do not add lines that start with a space
-export HISTCONTROL=erasedups:ignoredups:ignorespace
-
-# Check the window size after each command and, if necessary, update the values of LINES and COLUMNS
-shopt -s checkwinsize
-
-# Causes bash to append to history instead of overwriting it so if you start a new terminal, you have old session history
-shopt -s histappend
-PROMPT_COMMAND='history -a'
-
-# Allow ctrl-S for history navigation (with ctrl-R)
-[[ $- == *i* ]] && stty -ixon
-
-# Ignore case on auto-completion
-# Note: bind used instead of sticking these in .inputrc
-if [[ $iatest -gt 0 ]]; then bind "set completion-ignore-case on"; fi
-
-# Show auto-completion list automatically, without double tab
-if [[ $iatest -gt 0 ]]; then bind "set show-all-if-ambiguous On"; fi
-
-# Set the default editor
-export EDITOR=nvim
-export VISUAL=nvim
-alias pico='edit'
-alias spico='sedit'
-alias nano='edit'
-alias snano='sedit'
-alias vim='nvim'
-
-# Replace batcat with cat on Fedora as batcat is not available as a RPM in any form
-if command -v lsb_release >/dev/null; then
-	DISTRIBUTION=$(lsb_release -si)
-
-	if [ "$DISTRIBUTION" = "Fedora" ]; then
-		alias cat='bat'
-	else
-		alias cat='batcat'
-	fi
+# Autojump setup
+if [ -f "/usr/share/autojump/autojump.sh" ]; then
+  . /usr/share/autojump/autojump.sh
+elif [ -f "/usr/share/autojump/autojump.bash" ]; then
+  . /usr/share/autojump/autojump.bash
+else
+  echo "Error: Can't find the autojump script"
 fi
 
-# To have colors for ls and all grep commands such as grep, egrep and zgrep
-export CLICOLOR=1
-export LS_COLORS='no=00:fi=00:di=00;34:ln=01;36:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.jpg=01;35:*.jpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.avi=01;35:*.fli=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.ogg=01;35:*.mp3=01;35:*.wav=01;35:*.xml=00;31:'
-#export GREP_OPTIONS='--color=auto' #deprecated
-alias grep="/usr/bin/grep $GREP_OPTIONS"
-unset GREP_OPTIONS
 
-# Color for manpages in less makes manpages a little easier to read
-export LESS_TERMCAP_mb=$'\E[01;31m'
-export LESS_TERMCAP_md=$'\E[01;31m'
-export LESS_TERMCAP_me=$'\E[0m'
-export LESS_TERMCAP_se=$'\E[0m'
-export LESS_TERMCAP_so=$'\E[01;44;33m'
-export LESS_TERMCAP_ue=$'\E[0m'
-export LESS_TERMCAP_us=$'\E[01;32m'
+  PATH="$HOME/.local/bin:$PATH"
+fi
 
-#######################################################
-# MACHINE SPECIFIC ALIAS'S
-#######################################################
+if [ -d "$HOME/Applications" ]; then
+  PATH="$HOME/Applications:$PATH"
+fi
 
-# Alias's for SSH
-# alias SERVERNAME='ssh YOURWEBSITE.com -l USERNAME -p PORTNUMBERHERE'
+if [ -d "/var/lib/flatpak/exports/bin/" ]; then
+  PATH="/var/lib/flatpak/exports/bin/:$PATH"
+fi
 
-# Alias's to change the directory
-alias web='cd /var/www/html'
+if [ -d "$HOME/.spicetify" ]; then
+  PATH="$HOME/.spicetify:$PATH"
+fi
 
-# Alias's to mount ISO files
-# mount -o loop /home/NAMEOFISO.iso /home/ISOMOUNTDIR/
-# umount /home/NAMEOFISO.iso
-# (Both commands done as root only.)
+if [ -d "/home/linuxbrew/.linuxbrew/bin" ]; then
+  PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"
+fi
 
-#######################################################
-# GENERAL ALIAS'S
-#######################################################
-# To temporarily bypass an alias, we precede the command with a \
-# EG: the ls command is aliased, but to use the normal ls command you would type \ls
+# Cleanup of home dicrictory
+export XDG_DATA_HOME="$HOME/.local/share"
+export XDG_CONFIG_HOME="$HOME/.config"
+export XDG_STATE_HOME="$HOME/.local/state"
+export XDG_CACHE_HOME="$HOME/.cache"
+export DOT_FOLLDER="$HOME/.dot-follders"
+export ANDROID_HOME="$DOT_FOLLDER"/android
+export WINEPREFIX="$DOT_FOLLDER"/wine
+export _JAVA_OPTIONS=-Djava.util.prefs.userRoot="$DOT_FOLLDER"/java
+export CUDA_CACHE_PATH="$XDG_CACHE_HOME"/nv
+export GTK2_RC_FILES="$XDG_CONFIG_HOME"/gtk-2.0/gtkrc
+alias wget=wget --hsts-file="$XDG_DATA_HOME/wget-hsts"
+export XDG_SCREENSHOTS_DIR="$HOME/Pictures/Screenshots"
 
-# Add an "alert" alias for long running commands.  Use like so:
-#   sleep 10; alert
-alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
+# Terminal Settings
+export TERM="xterm-256color"
+export EDITOR=nano
 
-# Edit this .bashrc file
-alias ebrc='edit ~/.bashrc'
-
-# Show help for this .bashrc file
-alias hlp='less ~/.bashrc_help'
-
-# alias to show the date
-alias da='date "+%Y-%m-%d %A %T %Z"'
-
-# Alias's to modified commands
+# Aliases for File and Directory Operations
+alias ll='ls -all --color=auto -h'
 alias cp='cp -i'
 alias mv='mv -i'
 alias rm='trash -v'
@@ -126,58 +69,141 @@ alias mkdir='mkdir -p'
 alias ps='ps auxf'
 alias ping='ping -c 10'
 alias less='less -R'
-alias cls='clear'
-alias apt-get='sudo apt-get'
+alias cls='clear && colorscript -r'
+alias clear='/bin/clear && colorscript -r'
 alias multitail='multitail --no-repeat -c'
 alias freshclam='sudo freshclam'
-alias vi='nvim'
+
+# Text Editors
+alias vi='nvim -u ~/Documents/GitHub/dot-files/vim-nano/nano.vim'
 alias svi='sudo vi'
-alias vis='nvim "+set si"'
+alias vis='nvim -u ~/Documents/GitHub/dot-files/vim-nano/nano.vim "+set si"'
+alias vim='nvim -u ~/Documents/GitHub/dot-files/vim-nano/nano.vim'
+
+# Archive Aliases
+alias mktar='tar -cvf'
+alias mkbz2='tar -cvjf'
+alias mkgz='tar -cvzf'
+alias untar='tar -xvf'
+alias unbz2='tar -xvjf'
+alias ungz='tar -xvzf'
+
+# History Aliases
+alias h='history'
+alias hs='history | grep'
+alias hsi='history | grep -i'
+
+# Clipboard Operations
+alias pbcopy='xclip -selection clipboard'
+alias pbpaste='xclip -selection clipboard -o'
+alias copydir='pwd | tr -d "\r\n" | pbcopy'
+
+# Speed Test
+# alias speedtest='speedtest-cli --secure'
+
+# GNOME Text Editor
+alias gedit='gnome-text-editor'
+alias sudo-gedit='sudo gnome-text-editor'
+
+# Neofetch Fix
+alias neofetch-big='/bin/neofetch --ascii ~/.config/neofetch/cat.txt | lolcat'
+alias neofetch-small='/bin/neofetch --ascii ~/.config/neofetch/cat2.txt | lolcat'
+alias neofetch-big2='/bin/neofetch --ascii ~/.config/neofetch/steaven.txt | lolcat'
+alias neofetch-small2='/bin/neofetch --ascii ~/.config/neofetch/steaven2.txt | lolcat'
+alias neofetch-art='/bin/neofetch --caca ~/.config/neofetch/Toad_Artwork_-_Super_Mario_3D_World.png'
+alias neofetch-image='/bin/neofetch --sixel ~/.config/neofetch/Toad_Artwork_-_Super_Mario_3D_World.png | lolcat'
+
+# Antivirus Update
+alias antivirus-update='freshclam'
+
+# looking-glass
+alias looking-glass-opengl='looking-glass-client -m 97 -g OpenGL'
+alias looking-glass-egl='looking-glass-client -m 97 -g EGL'
+# supergxctl 
+alias gpulinux='supergfxctl -m Hybrid && logout'
+alias gpudis='supergfxctl -m Integrated && logout'
+alias gpuwindows='supergfxctl -m Vfio'
+
+# yt-dlp Aliases
+alias yta-aac="yt-dlp --extract-audio --audio-format aac --embed-metadata --embed-thumbnail "
+alias yta-best="yt-dlp --extract-audio --audio-format best --embed-metadata --embed-thumbnail "
+alias yta-flac="yt-dlp --extract-audio --audio-format flac --embed-metadata --embed-thumbnail "
+alias yta-m4a="yt-dlp --extract-audio --audio-format m4a --embed-metadata --embed-thumbnail "
+alias yta-mp3="yt-dlp --extract-audio --audio-format mp3 --embed-metadata --embed-thumbnail "
+alias yta-opus="yt-dlp --extract-audio --audio-format opus --embed-metadata --embed-thumbnail "
+alias yta-vorbis="yt-dlp --extract-audio --audio-format vorbis --embed-metadata --embed-thumbnail "
+alias yta-wav="yt-dlp --extract-audio --audio-format wav --embed-metadata --embed-thumbnail "
+alias ytv-best="yt-dlp -f bestvideo+bestaudio --embed-metadata --embed-thumbnail --embed-chapters "
+alias ytv-best-mp4='yt-dlp -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best" --embed-metadata --embed-thumbnail --embed-chapters'
+alias ytv-best-mp4-1080p='yt-dlp -f "bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best" --embed-metadata --embed-thumbnail --embed-chapters'
+
+# Play video files in current dir by type
+alias playavi='vlc *.avi'
+alias playmov='vlc *.mov'
+alias playmp4='vlc *.mp4'
+
+# human readable sizes
+alias df='df -h'                          # human-readable sizes
+alias free='free -m'                      # show sizes in MB
+# udo mastake fix
+alias udo='sudo'
+
+# Colorize Grep Output
+alias grep='grep --color=auto'
+alias egrep='egrep --color=auto'
+alias fgrep='fgrep --color=auto'
+
+# Display Open Ports
+alias openports='netstat -nape --inet'
+
+# Reboot Aliases
+alias rebootsafe='sudo shutdown -r now'
+alias rebootforce='sudo shutdown -r -n now'
+# GIT Customizations
+gitpush() {
+    git add .
+    git commit -m "$*"
+    git pull
+    git push
+}
+
+gitupdate() {
+    eval "$(ssh-agent -s)"
+    ssh-add ~/.ssh/github
+    ssh -T git@github.com
+}
+
+git-push() {
+    git add .
+    git commit -m "$1"
+    git push
+}
+
+gitcommit() {
+    git add .
+    git commit -m "$1"
+}
+
+# Aliases for GIT
+alias gp='gitpush'
+alias gu='gitupdate'
+alias gpush='git-push'
+alias gcommit='gitcommit'
+
+# Directory and Navigation Aliases
+cdgit() {
+    z ~/Documents/GitHub/"$1"
+}
+
+alias cdgitf='z ~/Documents/GitHub'
+alias cddot='z ~/Documents/GitHub/dot-files'
 
 # Change directory aliases
-alias home='cd ~'
-alias cd..='cd ..'
-alias ..='cd ..'
-alias ...='cd ../..'
-alias ....='cd ../../..'
-alias .....='cd ../../../..'
+alias web='z /var/www/html'
+alias home='z ~'
 
 # cd into the old directory
 alias bd='cd "$OLDPWD"'
-
-# Remove a directory and all files
-alias rmd='/bin/rm  --recursive --force --verbose '
-
-# Alias's for multiple directory listing commands
-alias la='ls -Alh'                # show hidden files
-alias ls='ls -aFh --color=always' # add colors and file type extensions
-alias lx='ls -lXBh'               # sort by extension
-alias lk='ls -lSrh'               # sort by size
-alias lc='ls -lcrh'               # sort by change time
-alias lu='ls -lurh'               # sort by access time
-alias lr='ls -lRh'                # recursive ls
-alias lt='ls -ltrh'               # sort by date
-alias lm='ls -alh |more'          # pipe through 'more'
-alias lw='ls -xAh'                # wide listing format
-alias ll='ls -Fls'                # long listing format
-alias labc='ls -lap'              #alphabetical sort
-alias lf="ls -l | egrep -v '^d'"  # files only
-alias ldir="ls -l | egrep '^d'"   # directories only
-
-# alias chmod commands
-alias mx='chmod a+x'
-alias 000='chmod -R 000'
-alias 644='chmod -R 644'
-alias 666='chmod -R 666'
-alias 755='chmod -R 755'
-alias 777='chmod -R 777'
-
-# Search command line history
-alias h="history | grep "
-
-# Search running processes
-alias p="ps aux | grep "
-alias topcpu="/bin/ps -eo pcpu,pid,user,args | sort -k 1 -r | head -10"
 
 # Search files in the current folder
 alias f="find . | grep "
@@ -188,544 +214,232 @@ alias countfiles="for t in files links directories; do echo \`find . -type \${t:
 # To see if a command is aliased, a file, or a built-in command
 alias checkcommand="type -t"
 
-# Show open ports
-alias openports='netstat -nape --inet'
 
-# Alias's for safe and forced reboots
-alias rebootsafe='sudo shutdown -r now'
-alias rebootforce='sudo shutdown -r -n now'
-
-# Alias's to show disk space and space used in a folder
-alias diskspace="du -S | sort -n -r |more"
+# Disk Space and Usage
+alias diskspace="du -S -h | sort -n -r |more"
 alias folders='du -h --max-depth=1'
 alias folderssort='find . -maxdepth 1 -type d -print0 | xargs -0 du -sk | sort -rn'
 alias tree='tree -CAhF --dirsfirst'
 alias treed='tree -CAFd'
 alias mountedinfo='df -hT'
 
-# Alias's for archives
-alias mktar='tar -cvf'
-alias mkbz2='tar -cvjf'
-alias mkgz='tar -cvzf'
-alias untar='tar -xvf'
-alias unbz2='tar -xvjf'
-alias ungz='tar -xvzf'
+# XLS Clients Fix
+alias xwayland-apps='xlsclients'
+alias watch-xwayland-apps='watch xlsclients'
 
-# Show all logs in /var/log
-alias logs="sudo find /var/log -type f -exec file {} \; | grep 'text' | cut -d' ' -f1 | sed -e's/:$//g' | grep -v '[0-9]$' | xargs tail -f"
+# Pacman and Yay Aliases
+alias pacman='sudo pacman'                       # Fixs pacman when its not runed as sudo
+alias pacsyu='sudo pacman -Syu'                  # update only standard pkgs
+alias pacsyyu='sudo pacman -Syyu'                # Refresh pkglist & update standard pkgs
+alias yaysua='yay -Sua --noconfirm'              # update only AUR pkgs (yay)
+alias yaysyu='yay -Syu --noconfirm'              # update standard pkgs and AUR pkgs (yay)
+alias parsua='paru -Sua --noconfirm'             # update only AUR pkgs (paru)
+alias parsyu='paru -Syu --noconfirm'             # update standard pkgs and AUR pkgs (paru)
+alias unlock='sudo rm /var/lib/pacman/db.lck'    # remove pacman lock
+alias cleanup='sudo pacman -Rns $(pacman -Qtdq)' # remove orphaned packages
 
-# SHA1
-alias sha1='openssl sha1'
+# Flatpak Aliases
+alias theme-flatpak='~/Documents/GitHub/dot-files/flatpak/stylepak install-system'
+alias flatpak-update-font-cache='~/Documents/GitHub/dot-files/flatpak/flatpak-font.sh'
 
-alias clickpaste='sleep 3; xdotool type "$(xclip -o -selection clipboard)"'
+# SSH and System Update Aliases
+updatearch="yay -Syu --noconfirm --needed && sudo flatpak update -y"
+updatefedora="sudo dnf update -y && sudo flatpak update -y"
+updatedebian="sudo nala upgrade -y && sudo flatpak update -y"
+alias update-all="ssh -t omar-pc '${updatearch}' && ssh -t omar-gaminglaptop '${updatearch}'"
+dotfiles='cd ~/Documents/GitHub/dot-files && git pull && cd'
+alias update-dotfiles="ssh -t omar-pc '${dotfiles}' && ssh -t omar-gaminglaptop '${dotfiles}'"
 
-# KITTY - alias to be able to use kitty features when connecting to remote servers(e.g use tmux on remote server)
+# Cache Fix
+export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
 
-alias kssh="kitty +kitten ssh"
-
-#######################################################
-# SPECIAL FUNCTIONS
-#######################################################
-
-# Use the best version of pico installed
-edit() {
-	if [[ $(type -t jpico) == "file" ]] || ([[ $(type -t jpico) == "alias" ]] && [[ -n $(which jpico) ]]); then
-		# Use JOE text editor http://joe-editor.sourceforge.net/
-		jpico -nonotice -linums -nobackups "$@"
-	elif [[ $(type -t nano) == "file" ]] || ([[ $(type -t nano) == "alias" ]] && [[ -n $(which nano) ]]); then
-		nano -c "$@"
-	elif [[ $(type -t pico) == "file" ]] || ([[ $(type -t pico) == "alias" ]] && [[ -n $(which pico) ]]); then
-		pico "$@"
-	else
-		nvim "$@"
-	fi
-}
-sedit() {
-	if [ "$(type -t jpico)" = "file" ]; then
-		# Use JOE text editor http://joe-editor.sourceforge.net/
-		sudo jpico -nonotice -linums -nobackups "$@"
-	elif [ "$(type -t nano)" = "file" ]; then
-		sudo nano -c "$@"
-	elif [ "$(type -t pico)" = "file" ]; then
-		sudo pico "$@"
-	else
-		sudo nvim "$@"
-	fi
+# Konsole Fix
+bash_in_konsole() {
+  local IFS
+  konsole -e bash --rcfile <(printf '. ~/.bashrc; set -m; %s\n' "$*")
 }
 
-# Extracts any archive(s) (if unp isn't installed)
-extract() {
-	for archive in "$@"; do
-		if [ -f "$archive" ]; then
-			case $archive in
-			*.tar.bz2) tar xvjf $archive ;;
-			*.tar.gz) tar xvzf $archive ;;
-			*.bz2) bunzip2 $archive ;;
-			*.rar) rar x $archive ;;
-			*.gz) gunzip $archive ;;
-			*.tar) tar xvf $archive ;;
-			*.tbz2) tar xvjf $archive ;;
-			*.tgz) tar xvzf $archive ;;
-			*.zip) unzip $archive ;;
-			*.Z) uncompress $archive ;;
-			*.7z) 7z x $archive ;;
-			*) echo "don't know how to extract '$archive'..." ;;
-			esac
-		else
-			echo "'$archive' is not a valid file!"
-		fi
-	done
+# Batcat
+alias cat='batcat'
+
+# FC-list Customization
+# custom fc-list
+# - sort list
+# - add color
+# - format table output
+function fc-list () {
+  # if calling with arguments, call the original command
+  if [[ "$#" -gt 0 ]]; then
+    command fc-list "$@"
+    return $?
+  fi
+
+  # prepend header
+  {
+    echo "FILE:FAMILY:STYLE"
+    command fc-list "$@" 
+  } | \
+  sort | \
+  # replace weird space after colon after file name
+  sed -E 's/: /:/g' | \
+
+  # pretty print the file path, and other field fixes
+  command awk -F: '
+  BEGIN {
+    green="\033[32m";
+    white="\033[0m";
+    bold="\033[1m";
+    reset="\033[0m";
+  }
+  function pretty_print_directory(path) {
+    last_slash = match(path, /\/[^\/]+$/);
+    directory = substr(path, 1, last_slash);
+    file = substr(path, last_slash + 1);
+
+    # print the directory in green, and the file in white and bold
+    return green directory white bold file reset;
+  }
+  {
+    # skip header row, but make every field bold
+    if (NR == 1) {
+      OFS=":";
+      for (i = 1; i <= NF; i++) {
+        $i = bold $i reset;
+      }
+      print $0;
+      next;
+    }
+    OFS=":";
+    $1 = pretty_print_directory($1);
+
+    # remove "style=" prefix from 3rd field
+    sub(/^style=/, "", $3);
+
+    # if third field (styles) consist of 3+ comma separated values, print only
+    # the first
+    # two followed by "..."
+    if (match($3, /,[^,]+,[^,]+$/)) {
+      $3 = gensub(/^([^,]+,[^,]+).*/, "\\1, ...", 1, $3);
+    }
+
+    print $0;
+  }' | \
+  column -t -s: | \
+  less -S
 }
 
-# Searches for text in all files in the current folder
-ftext() {
-	# -i case-insensitive
-	# -I ignore binary files
-	# -H causes filename to be printed
-	# -r recursive search
-	# -n causes line number to be printed
-	# optional: -F treat search term as a literal, not a regular expression
-	# optional: -l only print filenames and not the matching lines ex. grep -irl "$1" *
-	grep -iIHrn --color=always "$1" . | less -r
+alias fonts="fc-list"
+
+# fc-list-families
+# - list only the font families in the system
+function fc-list-families () {
+  command fc-list : family | sort
+}
+alias font-families="fc-list-families"
+
+function ix() {
+  local file="$1"
+  curl -F "f:1=@$file" ix.io
 }
 
-# Copy file with a progress bar
-cpp() {
-	set -e
-	strace -q -ewrite cp -- "${1}" "${2}" 2>&1 |
-		awk '{
-	count += $NF
-	if (count % 10 == 0) {
-		percent = count / total_size * 100
-		printf "%3d%% [", percent
-		for (i=0;i<=percent;i++)
-			printf "="
-			printf ">"
-			for (i=percent;i<100;i++)
-				printf " "
-				printf "]\r"
-			}
-		}
-	END { print "" }' total_size="$(stat -c '%s' "${1}")" count=0
-}
-
-# Copy and go to the directory
-cpg() {
-	if [ -d "$2" ]; then
-		cp "$1" "$2" && cd "$2"
-	else
-		cp "$1" "$2"
-	fi
-}
-
-# Move and go to the directory
-mvg() {
-	if [ -d "$2" ]; then
-		mv "$1" "$2" && cd "$2"
-	else
-		mv "$1" "$2"
-	fi
-}
-
-# Create and go to the directory
-mkdirg() {
-	mkdir -p "$1"
-	cd "$1"
-}
-
-# Goes up a specified number of directories  (i.e. up 4)
-up() {
-	local d=""
-	limit=$1
-	for ((i = 1; i <= limit; i++)); do
-		d=$d/..
-	done
-	d=$(echo $d | sed 's/^\///')
-	if [ -z "$d" ]; then
-		d=..
-	fi
-	cd $d
-}
-
-#Automatically do an ls after each cd
-# cd ()
-# {
-# 	if [ -n "$1" ]; then
-# 		builtin cd "$@" && ls
-# 	else
-# 		builtin cd ~ && ls
-# 	fi
-# }
-
-# Returns the last 2 fields of the working directory
-pwdtail() {
-	pwd | awk -F/ '{nlast = NF -1;print $nlast"/"$NF}'
-}
-
-# Show the current distribution
-distribution() {
-	local dtype
-	# Assume unknown
-	dtype="unknown"
-
-	# First test against Fedora / RHEL / CentOS / generic Redhat derivative
-	if [ -r /etc/rc.d/init.d/functions ]; then
-		source /etc/rc.d/init.d/functions
-		[ zz$(type -t passed 2>/dev/null) == "zzfunction" ] && dtype="redhat"
-
-	# Then test against SUSE (must be after Redhat,
-	# I've seen rc.status on Ubuntu I think? TODO: Recheck that)
-	elif [ -r /etc/rc.status ]; then
-		source /etc/rc.status
-		[ zz$(type -t rc_reset 2>/dev/null) == "zzfunction" ] && dtype="suse"
-
-	# Then test against Debian, Ubuntu and friends
-	elif [ -r /lib/lsb/init-functions ]; then
-		source /lib/lsb/init-functions
-		[ zz$(type -t log_begin_msg 2>/dev/null) == "zzfunction" ] && dtype="debian"
-
-	# Then test against Gentoo
-	elif [ -r /etc/init.d/functions.sh ]; then
-		source /etc/init.d/functions.sh
-		[ zz$(type -t ebegin 2>/dev/null) == "zzfunction" ] && dtype="gentoo"
-
-	# For Mandriva we currently just test if /etc/mandriva-release exists
-	# and isn't empty (TODO: Find a better way :)
-	elif [ -s /etc/mandriva-release ]; then
-		dtype="mandriva"
-
-	# For Slackware we currently just test if /etc/slackware-version exists
-	elif [ -s /etc/slackware-version ]; then
-		dtype="slackware"
-
-	fi
-	echo $dtype
-}
-
-# Show the current version of the operating system
-ver() {
-	local dtype
-	dtype=$(distribution)
-
-	if [ $dtype == "redhat" ]; then
-		if [ -s /etc/redhat-release ]; then
-			cat /etc/redhat-release && uname -a
-		else
-			cat /etc/issue && uname -a
-		fi
-	elif [ $dtype == "suse" ]; then
-		cat /etc/SuSE-release
-	elif [ $dtype == "debian" ]; then
-		lsb_release -a
-		# sudo cat /etc/issue && sudo cat /etc/issue.net && sudo cat /etc/lsb_release && sudo cat /etc/os-release # Linux Mint option 2
-	elif [ $dtype == "gentoo" ]; then
-		cat /etc/gentoo-release
-	elif [ $dtype == "mandriva" ]; then
-		cat /etc/mandriva-release
-	elif [ $dtype == "slackware" ]; then
-		cat /etc/slackware-version
-	else
-		if [ -s /etc/issue ]; then
-			cat /etc/issue
-		else
-			echo "Error: Unknown distribution"
-			exit 1
-		fi
-	fi
-}
-
-# Automatically install the needed support files for this .bashrc file
-install_bashrc_support() {
-	local dtype
-	dtype=$(distribution)
-
-	if [ $dtype == "redhat" ]; then
-		sudo yum install multitail tree joe
-	elif [ $dtype == "suse" ]; then
-		sudo zypper install multitail
-		sudo zypper install tree
-		sudo zypper install joe
-	elif [ $dtype == "debian" ]; then
-		sudo apt-get install multitail tree joe
-	elif [ $dtype == "gentoo" ]; then
-		sudo emerge multitail
-		sudo emerge tree
-		sudo emerge joe
-	elif [ $dtype == "mandriva" ]; then
-		sudo urpmi multitail
-		sudo urpmi tree
-		sudo urpmi joe
-	elif [ $dtype == "slackware" ]; then
-		echo "No install support for Slackware"
-	else
-		echo "Unknown distribution"
-	fi
-}
-
-# Show current network information
-netinfo() {
-	echo "--------------- Network Information ---------------"
-	/sbin/ifconfig | awk /'inet addr/ {print $2}'
-	echo ""
-	/sbin/ifconfig | awk /'Bcast/ {print $3}'
-	echo ""
-	/sbin/ifconfig | awk /'inet addr/ {print $4}'
-
-	/sbin/ifconfig | awk /'HWaddr/ {print $4,$5}'
-	echo "---------------------------------------------------"
-}
-
-# IP address lookup
-alias whatismyip="whatsmyip"
-function whatsmyip() {
-	# Dumps a list of all IP addresses for every device
-	# /sbin/ifconfig |grep -B1 "inet addr" |awk '{ if ( $1 == "inet" ) { print $2 } else if ( $2 == "Link" ) { printf "%s:" ,$1 } }' |awk -F: '{ print $1 ": " $3 }';
-
-	### Old commands
-	# Internal IP Lookup
-	#echo -n "Internal IP: " ; /sbin/ifconfig eth0 | grep "inet addr" | awk -F: '{print $2}' | awk '{print $1}'
-	#
-	#	# External IP Lookup
-	#echo -n "External IP: " ; wget http://smart-ip.net/myip -O - -q
-
-	# Internal IP Lookup.
-	if [ -e /sbin/ip ]; then
-		echo -n "Internal IP: "
-		/sbin/ip addr show wlan0 | grep "inet " | awk -F: '{print $1}' | awk '{print $2}'
-	else
-		echo -n "Internal IP: "
-		/sbin/ifconfig wlan0 | grep "inet " | awk -F: '{print $1} |' | awk '{print $2}'
-	fi
-
-	# External IP Lookup
-	echo -n "External IP: "
-	curl -s ifconfig.me
-}
-
-# View Apache logs
-apachelog() {
-	if [ -f /etc/httpd/conf/httpd.conf ]; then
-		cd /var/log/httpd && ls -xAh && multitail --no-repeat -c -s 2 /var/log/httpd/*_log
-	else
-		cd /var/log/apache2 && ls -xAh && multitail --no-repeat -c -s 2 /var/log/apache2/*.log
-	fi
-}
-
-# Edit the Apache configuration
-apacheconfig() {
-	if [ -f /etc/httpd/conf/httpd.conf ]; then
-		sedit /etc/httpd/conf/httpd.conf
-	elif [ -f /etc/apache2/apache2.conf ]; then
-		sedit /etc/apache2/apache2.conf
-	else
-		echo "Error: Apache config file could not be found."
-		echo "Searching for possible locations:"
-		sudo updatedb && locate httpd.conf && locate apache2.conf
-	fi
-}
-
-# Edit the PHP configuration file
-phpconfig() {
-	if [ -f /etc/php.ini ]; then
-		sedit /etc/php.ini
-	elif [ -f /etc/php/php.ini ]; then
-		sedit /etc/php/php.ini
-	elif [ -f /etc/php5/php.ini ]; then
-		sedit /etc/php5/php.ini
-	elif [ -f /usr/bin/php5/bin/php.ini ]; then
-		sedit /usr/bin/php5/bin/php.ini
-	elif [ -f /etc/php5/apache2/php.ini ]; then
-		sedit /etc/php5/apache2/php.ini
-	else
-		echo "Error: php.ini file could not be found."
-		echo "Searching for possible locations:"
-		sudo updatedb && locate php.ini
-	fi
-}
-
-# Edit the MySQL configuration file
-mysqlconfig() {
-	if [ -f /etc/my.cnf ]; then
-		sedit /etc/my.cnf
-	elif [ -f /etc/mysql/my.cnf ]; then
-		sedit /etc/mysql/my.cnf
-	elif [ -f /usr/local/etc/my.cnf ]; then
-		sedit /usr/local/etc/my.cnf
-	elif [ -f /usr/bin/mysql/my.cnf ]; then
-		sedit /usr/bin/mysql/my.cnf
-	elif [ -f ~/my.cnf ]; then
-		sedit ~/my.cnf
-	elif [ -f ~/.my.cnf ]; then
-		sedit ~/.my.cnf
-	else
-		echo "Error: my.cnf file could not be found."
-		echo "Searching for possible locations:"
-		sudo updatedb && locate my.cnf
-	fi
-}
-
-# For some reason, rot13 pops up everywhere
-rot13() {
-	if [ $# -eq 0 ]; then
-		tr '[a-m][n-z][A-M][N-Z]' '[n-z][a-m][N-Z][A-M]'
-	else
-		echo $* | tr '[a-m][n-z][A-M][N-Z]' '[n-z][a-m][N-Z][A-M]'
-	fi
-}
-
-# Trim leading and trailing spaces (for scripts)
-trim() {
-	local var=$*
-	var="${var#"${var%%[![:space:]]*}"}" # remove leading whitespace characters
-	var="${var%"${var##*[![:space:]]}"}" # remove trailing whitespace characters
-	echo -n "$var"
-}
-# GitHub Titus Additions
-
-gcom() {
-	git add .
-	git commit -m "$1"
-}
-lazyg() {
-	git add .
-	git commit -m "$1"
-	git push
-}
-
-# Aliases git
-alias g='git'
-compdef g=git
-alias gst='git status'
-compdef _git gst=git-status
-alias gcl='git clone --recurse-submodules'
-compdef _git gcl=git-clone
-alias gl='git pull'
-compdef _git gl=git-pull
-alias gup='git fetch && git rebase'
-compdef _git gup=git-fetch
-alias gp='git push'
-compdef _git gp=git-push
-gdv() { git diff -w "$@" | view - }
-compdef _git gdv=git-diff
-alias gc='git commit -v'
-compdef _git gc=git-commit
-alias gca='git commit -v -a'
-compdef _git gca=git-commit
-alias gco='git checkout'
-compdef _git gco=git-checkout
-alias gcm='git checkout master'
-alias gb='git branch'
-compdef _git gb=git-branch
-alias gba='git branch -a'
-compdef _git gba=git-branch
-alias gcount='git shortlog -sn'
-compdef gcount=git
-alias gcp='git cherry-pick'
-compdef _git gcp=git-cherry-pick
-alias glg='git log --stat --max-count=5'
-compdef _git glg=git-log
-alias glgg='git log --graph --max-count=5'
-compdef _git glgg=git-log
-alias gss='git status -s'
-compdef _git gss=git-status
-alias ga='git add'
-compdef _git ga=git-add
-alias gm='git merge'
-compdef _git gm=git-merge
-alias grh='git reset HEAD'
-alias grhh='git reset HEAD --hard'
-compdef _git grhh=git-reset-hard
-alias gsbm='git submodule update --init --remote --force --recursive'
-compdef _git gsbm='git-submodule-update'
-
-#
-# Will return the current branch name
-# Usage example: git pull origin $(current_branch)
-#
-function current_branch() {
-  ref=$(git symbolic-ref HEAD 2> /dev/null) || return
-  echo ${ref#refs/heads/}
-}
-
-function current_repository() {
-
-  ref=$(git symbolic-ref HEAD 2> /dev/null) || return
-  echo $(git remote -v | cut -d':' -f 2)
-}
-_z_cd() {
-	cd "$@" || return "$?"
-
-	if [ "$_ZO_ECHO" = "1" ]; then
-		echo "$PWD"
-	fi
-}
-
-z() {
-	if [ "$#" -eq 0 ]; then
-		_z_cd ~
-	elif [ "$#" -eq 1 ] && [ "$1" = '-' ]; then
-		if [ -n "$OLDPWD" ]; then
-			_z_cd "$OLDPWD"
-		else
-			echo 'zoxide: $OLDPWD is not set'
-			return 1
-		fi
-	else
-		_zoxide_result="$(zoxide query -- "$@")" && _z_cd "$_zoxide_result"
-	fi
-}
-
-zi() {
-	_zoxide_result="$(zoxide query -i -- "$@")" && _z_cd "$_zoxide_result"
-}
-
-alias za='zoxide add'
-
-alias zq='zoxide query'
-alias zqi='zoxide query -i'
-
-alias zr='zoxide remove'
-zri() {
-	_zoxide_result="$(zoxide query -i -- "$@")" && zoxide remove "$_zoxide_result"
-}
-
-_zoxide_hook() {
-	if [ -z "${_ZO_PWD}" ]; then
-		_ZO_PWD="${PWD}"
-	elif [ "${_ZO_PWD}" != "${PWD}" ]; then
-		_ZO_PWD="${PWD}"
-		zoxide add "$(pwd -L)"
-	fi
-}
-
-case "$PROMPT_COMMAND" in
-*_zoxide_hook*) ;;
-*) PROMPT_COMMAND="_zoxide_hook${PROMPT_COMMAND:+;${PROMPT_COMMAND}}" ;;
-esac
-alias lookingglass="~/looking-glass-B5.0.1/client/build/looking-glass-client -F"
-#######################################################
-# Set the ultimate amazing command prompt
-#######################################################
-
-alias hug="hugo server -F --bind=10.0.0.210 --baseURL=http://10.0.0.210"
-
-export PATH=$PATH:"$HOME/.local/bin:$HOME/.cargo/bin:/var/lib/flatpak/exports/bin:/.local/share/flatpak/exports/bin"
-
-# Install Starship - curl -sS https://starship.rs/install.sh | sh
-
-eval "$(starship init bash)"
-
-# Install zoxide 
-eval "$(zoxide init bash)"
-
-#Autojump and fzf
-
-if [ -f "/usr/share/autojump/autojump.sh" ]; then
-	. /usr/share/autojump/autojump.sh
-elif [ -f "/usr/share/autojump/autojump.bash" ]; then
-	. /usr/share/autojump/autojump.bash
+# Check for Color Script
+if command -v colorscript &> /dev/null; then
+  colorscript -r
 else
-	echo "can't found the autojump script"
+  echo "Can't find the Shell Color script"
+fi
+stv-install() {
+    if [[ $1 == "-v" ]]; then
+        x=$@
+        if [[ $2 == "arch" ]]; then
+            x=${x/-v arch/}
+            distrobox-enter -H arch -- sudo pacman $x
+        elif [[ $2 == "ubuntu" ]]; then
+            x=${x/-v ubuntu/}
+            distrobox-enter -H ubuntu -- sudo apt $x
+        elif [[ $2 == "fedora" ]]; then
+            x=${x/-v fedora/}
+            distrobox-enter -H fedora -- sudo dnf $x
+        elif [[ $2 == "opensuse" ]]; then
+            x=${x/-v opensuse/}
+            distrobox-enter -H opensuse -- sudo zypper $x
+        else
+            echo "Command Not Found"
+        fi
+    fi
+}
+
+stv() {
+    if [[ $1 == "-v" ]]; then
+        x=$@
+        if [[ $2 == "arch" ]]; then
+            x=${x/-v arch/}
+            distrobox-enter -H arch $x
+        elif [[ $2 == "ubuntu" ]]; then
+            x=${x/-v ubuntu/}
+            distrobox-enter -H ubuntu -- $x
+        elif [[ $2 == "fedora" ]]; then
+            x=${x/-v fedora/}
+            distrobox-enter -H fedora -- $x
+        elif [[ $2 == "opensuse" ]]; then
+            x=${x/-v opensuse/}
+            distrobox-enter -H opensuse -- $x
+        else
+            echo "Command Not Found"
+        fi
+    fi
+}
+function ix {
+  curl -F "f:1=@$1" ix.io
+}
+
+function 0x0 {
+  curl -F "file=@$1" https://0x0.st
+}
+
+# Audio / Sound (I got sick of searching for it in my discord server at #🔥linux-tips)
+alias combine-audio='pactl load-module module-combine-sink'
+alias uncombine-audio='pactl unload-module module-combine-sink'
+
+# History settings
+HISTFILE=~/.bash-history
+HISTSIZE=SAVEHIST=10000
+
+# Starship prompt configuration based on Linux distribution
+if [ -e /etc/os-release ]; then
+    linux_distro=$(awk -F= '/^ID=/{gsub(/"/, "", $2); print tolower($2)}' /etc/os-release)
+else
+    # fallback to your previous method if /etc/os-release is not available
+    linux_distro=$(lsb_release -si | tr '[:upper:]' '[:lower:]')
 fi
 
-[ -f ~/.fzf.bash ] && source ~/.fzf.bash
+case $linux_distro in
+  arch)
+    export STARSHIP_CONFIG=~/.config/starship/starship-arch.toml
+    ;;
+  fedora)
+    export STARSHIP_CONFIG=~/.config/starship/starship-fedora.toml
+    ;;
+  debian)
+    export STARSHIP_CONFIG=~/.config/starship/starship-debian.toml
+    ;;
+  ubuntu)
+    export STARSHIP_CONFIG=~/.config/starship/starship-ubuntu.toml
+    ;;
+  opensuse-tumbleweed)
+    export STARSHIP_CONFIG=~/.config/starship/starship-opensuse.toml
+    ;;
+  *)
+    export STARSHIP_CONFIG=~/.config/starship/starship.toml
+    ;;
+esac
+
+# Check if Starship configuration is readable before initializing
+if ! [[ -r "$STARSHIP_CONFIG" ]]; then
+    echo "Error: The configuration file $STARSHIP_CONFIG is not readable!"
+fi
+
+eval "$(starship init bash)"
+#eval "$(atuin init bash)"
+eval "$(zoxide init bash)"
+
