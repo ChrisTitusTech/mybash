@@ -16,8 +16,8 @@ PS1='[\u@\h \W]\$ '
 # Useful Functions
 
 # Function to combine cd and ls command
-cl() { 
-    cd "$1" && ls -lrth; 
+cl() {
+    cd "$1" && ls -lrth;
 }
 
 # Copy and go to the directory

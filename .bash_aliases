@@ -51,8 +51,8 @@ alias gdf='git diff'
 alias gdfs='git diff --staged'
 alias gup='git fetch && git rebase'
 alias gpsh='git push'
-alias gcm='git commit -v -m'
-alias gcma='git commit -v -a -m'
+alias gcm='git commit -v'
+alias gcma='git commit -v -a'
 alias gco='git checkout'
 alias gcob='git checkout -b'
 alias gcom='git checkout main'
@@ -74,5 +74,4 @@ alias gsd="!sh -c 'git stash drop stash@{$1}' -"
 alias gsl="stash list"
 alias gss="stash save"
 
-# Alias's for flatpak apps
-alias code="flatpak run com.visualstudio.code"
+# Aliases for flatpak apps
