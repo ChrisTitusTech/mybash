@@ -27,24 +27,24 @@ checkEnv(){
     fi
 }
 
-installDepend(){
-    ## Check for dependencies.
-    # For some reason, if I put autojump in the original DEPENDENCIES variable, 
-    # it skips the installation and just does bash and bash completion. So I
-    # put autojump in a separate variable and separate yay command.
-    DEPENDENCIES1='bash bash-completion'
-    DEPENDENCIES2='autojump'
-    DEPENDENCIES2='autojump-git'
-    echo -e "${YELLOW}Installing dependencies...${RC}"
-    yay -S ${DEPENDENCIES1}
-    yay -S ${DEPENDENCIES2}
-    yay -S ${DEPENDENCIES3}
-    sudo mkdir /usr/local/bin/autojump
-    sudo ln -s /etc/profile.d/autojump.sh /usr/share/autojump/autojump.sh
-}
+# installDepend(){
+#     ## Check for dependencies.
+#     # For some reason, if I put autojump in the original DEPENDENCIES variable, 
+#     # it skips the installation and just does bash and bash completion. So I
+#     # put autojump in a separate variable and separate yay command.
+#     DEPENDENCIES1='bash bash-completion'
+#     DEPENDENCIES2='autojump'
+#     DEPENDENCIES2='autojump-git'
+#     echo -e "${YELLOW}Installing dependencies...${RC}"
+#     yay -S ${DEPENDENCIES1}
+#     yay -S ${DEPENDENCIES2}
+#     yay -S ${DEPENDENCIES3}
+#     sudo mkdir /usr/local/bin/autojump
+#     sudo ln -s /etc/profile.d/autojump.sh /usr/share/autojump/autojump.sh
+# }
 
 installStarship(){
-    if ! curl -sS https://starship.rs/install.sh|sh;then
+    if ! pacman -S starship;then
         echo -e "${RED}Something went wrong during starship install!${RC}"
         exit 1
     fi
@@ -68,10 +68,13 @@ linkConfig(){
 }
 
 checkEnv
-installDepend
+# installDepend
 installStarship
 if linkConfig;then
     echo -e "${GREEN}Done!\nrestart your shell to see the changes.${RC}"
 else
     echo -e "${RED}Something went wrong!${RC}"
 fi
+
+# You may have to use nerd fonts to make the Bash shell symbols all look correct
+# See -> https://www.nerdfonts.com/font-downloads
