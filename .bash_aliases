@@ -75,3 +75,4 @@ alias gsl="stash list"
 alias gss="stash save"
 
 # Aliases for flatpak apps
+alias code="flatpak run com.visualstudio.code"
