@@ -7,7 +7,7 @@ iatest=$(expr index "$-" i)
 
 # Source global definitions
 if [ -f /etc/bashrc ]; then
-	 . /etc/bashrc
+	. /etc/bashrc
 fi
 
 # Enable bash programmable completion features in interactive shells
@@ -56,7 +56,17 @@ alias spico='sedit'
 alias nano='edit'
 alias snano='sedit'
 alias vim='nvim'
-alias cat='batcat'
+
+# Replace batcat with cat on Fedora as batcat is not available as a RPM in any form
+if command -v lsb_release >/dev/null; then
+	DISTRIBUTION=$(lsb_release -si)
+
+	if [ "$DISTRIBUTION" = "Fedora" ]; then
+		alias cat='bat'
+	else
+		alias cat='batcat'
+	fi
+fi
 
 # To have colors for ls and all grep commands such as grep, egrep and zgrep
 export CLICOLOR=1
@@ -139,20 +149,20 @@ alias bd='cd "$OLDPWD"'
 alias rmd='/bin/rm  --recursive --force --verbose '
 
 # Alias's for multiple directory listing commands
-alias la='ls -Alh' # show hidden files
+alias la='ls -Alh'                # show hidden files
 alias ls='ls -aFh --color=always' # add colors and file type extensions
-alias lx='ls -lXBh' # sort by extension
-alias lk='ls -lSrh' # sort by size
-alias lc='ls -lcrh' # sort by change time
-alias lu='ls -lurh' # sort by access time
-alias lr='ls -lRh' # recursive ls
-alias lt='ls -ltrh' # sort by date
-alias lm='ls -alh |more' # pipe through 'more'
-alias lw='ls -xAh' # wide listing format
-alias ll='ls -Fls' # long listing format
-alias labc='ls -lap' #alphabetical sort
-alias lf="ls -l | egrep -v '^d'" # files only
-alias ldir="ls -l | egrep '^d'" # directories only
+alias lx='ls -lXBh'               # sort by extension
+alias lk='ls -lSrh'               # sort by size
+alias lc='ls -lcrh'               # sort by change time
+alias lu='ls -lurh'               # sort by access time
+alias lr='ls -lRh'                # recursive ls
+alias lt='ls -ltrh'               # sort by date
+alias lm='ls -alh |more'          # pipe through 'more'
+alias lw='ls -xAh'                # wide listing format
+alias ll='ls -Fls'                # long listing format
+alias labc='ls -lap'              #alphabetical sort
+alias lf="ls -l | egrep -v '^d'"  # files only
+alias ldir="ls -l | egrep '^d'"   # directories only
 
 # alias chmod commands
 alias mx='chmod a+x'
@@ -216,24 +226,23 @@ alias kssh="kitty +kitten ssh"
 #######################################################
 # SPECIAL FUNCTIONS
 #######################################################
-
 # Extracts any archive(s) (if unp isn't installed)
-extract () {
+extract() {
 	for archive in "$@"; do
-		if [ -f "$archive" ] ; then
+		if [ -f "$archive" ]; then
 			case $archive in
-				*.tar.bz2)   tar xvjf $archive    ;;
-				*.tar.gz)    tar xvzf $archive    ;;
-				*.bz2)       bunzip2 $archive     ;;
-				*.rar)       rar x $archive       ;;
-				*.gz)        gunzip $archive      ;;
-				*.tar)       tar xvf $archive     ;;
-				*.tbz2)      tar xvjf $archive    ;;
-				*.tgz)       tar xvzf $archive    ;;
-				*.zip)       unzip $archive       ;;
-				*.Z)         uncompress $archive  ;;
-				*.7z)        7z x $archive        ;;
-				*)           echo "don't know how to extract '$archive'..." ;;
+			*.tar.bz2) tar xvjf $archive ;;
+			*.tar.gz) tar xvzf $archive ;;
+			*.bz2) bunzip2 $archive ;;
+			*.rar) rar x $archive ;;
+			*.gz) gunzip $archive ;;
+			*.tar) tar xvf $archive ;;
+			*.tbz2) tar xvjf $archive ;;
+			*.tgz) tar xvzf $archive ;;
+			*.zip) unzip $archive ;;
+			*.Z) uncompress $archive ;;
+			*.7z) 7z x $archive ;;
+			*) echo "don't know how to extract '$archive'..." ;;
 			esac
 		else
 			echo "'$archive' is not a valid file!"
@@ -242,8 +251,7 @@ extract () {
 }
 
 # Searches for text in all files in the current folder
-ftext ()
-{
+ftext() {
 	# -i case-insensitive
 	# -I ignore binary files
 	# -H causes filename to be printed
@@ -255,11 +263,10 @@ ftext ()
 }
 
 # Copy file with a progress bar
-cpp()
-{
+cpp() {
 	set -e
-	strace -q -ewrite cp -- "${1}" "${2}" 2>&1 \
-	| awk '{
+	strace -q -ewrite cp -- "${1}" "${2}" 2>&1 |
+		awk '{
 	count += $NF
 	if (count % 10 == 0) {
 		percent = count / total_size * 100
@@ -276,9 +283,8 @@ cpp()
 }
 
 # Copy and go to the directory
-cpg ()
-{
-	if [ -d "$2" ];then
+cpg() {
+	if [ -d "$2" ]; then
 		cp "$1" "$2" && cd "$2"
 	else
 		cp "$1" "$2"
@@ -286,9 +292,8 @@ cpg ()
 }
 
 # Move and go to the directory
-mvg ()
-{
-	if [ -d "$2" ];then
+mvg() {
+	if [ -d "$2" ]; then
 		mv "$1" "$2" && cd "$2"
 	else
 		mv "$1" "$2"
@@ -296,21 +301,18 @@ mvg ()
 }
 
 # Create and go to the directory
-mkdirg ()
-{
+mkdirg() {
 	mkdir -p "$1"
 	cd "$1"
 }
 
 # Goes up a specified number of directories  (i.e. up 4)
-up ()
-{
+up() {
 	local d=""
 	limit=$1
-	for ((i=1 ; i <= limit ; i++))
-		do
-			d=$d/..
-		done
+	for ((i = 1; i <= limit; i++)); do
+		d=$d/..
+	done
 	d=$(echo $d | sed 's/^\///')
 	if [ -z "$d" ]; then
 		d=..
@@ -329,9 +331,8 @@ cd ()
 }
 
 # Returns the last 2 fields of the working directory
-pwdtail ()
-{
-	pwd|awk -F/ '{nlast = NF -1;print $nlast"/"$NF}'
+pwdtail() {
+	pwd | awk -F/ '{nlast = NF -1;print $nlast"/"$NF}'
 }
 
 # Show the current distribution
@@ -371,8 +372,7 @@ distribution ()
 }
 
 # Show the current version of the operating system
-ver ()
-{
+ver() {
 	local dtype
 	dtype=$(distribution)
 
@@ -412,8 +412,7 @@ ver ()
 }
 
 # Automatically install the needed support files for this .bashrc file
-install_bashrc_support ()
-{
+install_bashrc_support() {
 	local dtype
 	dtype=$(distribution)
 
@@ -444,20 +443,21 @@ alias whatismyip="whatsmyip"
 function whatsmyip ()
 {
 	# Internal IP Lookup.
-	if [ -e /sbin/ip ];
-	then
-		echo -n "Internal IP: " ; /sbin/ip addr show wlan0 | grep "inet " | awk -F: '{print $1}' | awk '{print $2}'
+	if [ -e /sbin/ip ]; then
+		echo -n "Internal IP: "
+		/sbin/ip addr show wlan0 | grep "inet " | awk -F: '{print $1}' | awk '{print $2}'
 	else
-		echo -n "Internal IP: " ; /sbin/ifconfig wlan0 | grep "inet " | awk -F: '{print $1} |' | awk '{print $2}'
+		echo -n "Internal IP: "
+		/sbin/ifconfig wlan0 | grep "inet " | awk -F: '{print $1} |' | awk '{print $2}'
 	fi
 
-	# External IP Lookup 
-	echo -n "External IP: " ; curl -s ifconfig.me
+	# External IP Lookup
+	echo -n "External IP: "
+	curl -s ifconfig.me
 }
 
 # View Apache logs
-apachelog ()
-{
+apachelog() {
 	if [ -f /etc/httpd/conf/httpd.conf ]; then
 		cd /var/log/httpd && ls -xAh && multitail --no-repeat -c -s 2 /var/log/httpd/*_log
 	else
@@ -466,8 +466,7 @@ apachelog ()
 }
 
 # Edit the Apache configuration
-apacheconfig ()
-{
+apacheconfig() {
 	if [ -f /etc/httpd/conf/httpd.conf ]; then
 		sedit /etc/httpd/conf/httpd.conf
 	elif [ -f /etc/apache2/apache2.conf ]; then
@@ -480,8 +479,7 @@ apacheconfig ()
 }
 
 # Edit the PHP configuration file
-phpconfig ()
-{
+phpconfig() {
 	if [ -f /etc/php.ini ]; then
 		sedit /etc/php.ini
 	elif [ -f /etc/php/php.ini ]; then
@@ -500,8 +498,7 @@ phpconfig ()
 }
 
 # Edit the MySQL configuration file
-mysqlconfig ()
-{
+mysqlconfig() {
 	if [ -f /etc/my.cnf ]; then
 		sedit /etc/my.cnf
 	elif [ -f /etc/mysql/my.cnf ]; then
@@ -523,11 +520,10 @@ mysqlconfig ()
 
 
 # Trim leading and trailing spaces (for scripts)
-trim()
-{
+trim() {
 	local var=$*
-	var="${var#"${var%%[![:space:]]*}"}"  # remove leading whitespace characters
-	var="${var%"${var##*[![:space:]]}"}"  # remove trailing whitespace characters
+	var="${var#"${var%%[![:space:]]*}"}" # remove leading whitespace characters
+	var="${var%"${var##*[![:space:]]}"}" # remove trailing whitespace characters
 	echo -n "$var"
 }
 # GitHub Titus Additions
@@ -535,7 +531,7 @@ trim()
 gcom() {
 	git add .
 	git commit -m "$1"
-	}
+}
 lazyg() {
 	git add .
 	git commit -m "$1"
