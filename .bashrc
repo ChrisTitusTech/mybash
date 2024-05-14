@@ -217,34 +217,6 @@ alias kssh="kitty +kitten ssh"
 # SPECIAL FUNCTIONS
 #######################################################
 
-# Use the best version of pico installed
-edit ()
-{
-	if [ "$(type -t jpico)" = "file" ]; then
-		# Use JOE text editor http://joe-editor.sourceforge.net/
-		jpico -nonotice -linums -nobackups "$@"
-	elif [ "$(type -t nano)" = "file" ]; then
-		nano -c "$@"
-	elif [ "$(type -t pico)" = "file" ]; then
-		pico "$@"
-	else
-		nvim "$@"
-	fi
-}
-sedit ()
-{
-	if [ "$(type -t jpico)" = "file" ]; then
-		# Use JOE text editor http://joe-editor.sourceforge.net/
-		sudo jpico -nonotice -linums -nobackups "$@"
-	elif [ "$(type -t nano)" = "file" ]; then
-		sudo nano -c "$@"
-	elif [ "$(type -t pico)" = "file" ]; then
-		sudo pico "$@"
-	else
-		sudo nvim "$@"
-	fi
-}
-
 # Extracts any archive(s) (if unp isn't installed)
 extract () {
 	for archive in "$@"; do
@@ -346,15 +318,15 @@ up ()
 	cd $d
 }
 
-#Automatically do an ls after each cd
-# cd ()
-# {
-# 	if [ -n "$1" ]; then
-# 		builtin cd "$@" && ls
-# 	else
-# 		builtin cd ~ && ls
-# 	fi
-# }
+# Automatically do an ls after each cd, z, or zoxide
+cd ()
+{
+	if [ -n "$1" ]; then
+		builtin cd "$@" && ls
+	else
+		builtin cd ~ && ls
+	fi
+}
 
 # Returns the last 2 fields of the working directory
 pwdtail ()
@@ -365,41 +337,36 @@ pwdtail ()
 # Show the current distribution
 distribution ()
 {
-	local dtype
-	# Assume unknown
-	dtype="unknown"
-	
-	# First test against Fedora / RHEL / CentOS / generic Redhat derivative
-	if [ -r /etc/rc.d/init.d/functions ]; then
-		source /etc/rc.d/init.d/functions
-		[ zz`type -t passed 2>/dev/null` == "zzfunction" ] && dtype="redhat"
-	
-	# Then test against SUSE (must be after Redhat,
-	# I've seen rc.status on Ubuntu I think? TODO: Recheck that)
-	elif [ -r /etc/rc.status ]; then
-		source /etc/rc.status
-		[ zz`type -t rc_reset 2>/dev/null` == "zzfunction" ] && dtype="suse"
-	
-	# Then test against Debian, Ubuntu and friends
-	elif [ -r /lib/lsb/init-functions ]; then
-		source /lib/lsb/init-functions
-		[ zz`type -t log_begin_msg 2>/dev/null` == "zzfunction" ] && dtype="debian"
-	
-	# Then test against Gentoo
-	elif [ -r /etc/init.d/functions.sh ]; then
-		source /etc/init.d/functions.sh
-		[ zz`type -t ebegin 2>/dev/null` == "zzfunction" ] && dtype="gentoo"
-	
-	# For Mandriva we currently just test if /etc/mandriva-release exists
-	# and isn't empty (TODO: Find a better way :)
-	elif [ -s /etc/mandriva-release ]; then
-		dtype="mandriva"
+	local dtype="unknown"  # Default to unknown
 
-	# For Slackware we currently just test if /etc/slackware-version exists
-	elif [ -s /etc/slackware-version ]; then
-		dtype="slackware"
-
+	# Use /etc/os-release for modern distro identification
+	if [ -r /etc/os-release ]; then
+		source /etc/os-release
+		case $ID in
+			fedora|rhel|centos)
+				dtype="redhat"
+				;;
+			sles|opensuse*)
+				dtype="suse"
+				;;
+			ubuntu|debian)
+				dtype="debian"
+				;;
+			gentoo)
+				dtype="gentoo"
+				;;
+			arch)
+				dtype="arch"
+				;;
+			slackware)
+				dtype="slackware"
+				;;
+			*)
+				# If ID is not recognized, keep dtype as unknown
+				;;
+		esac
 	fi
+
 	echo $dtype
 }
 
@@ -409,31 +376,39 @@ ver ()
 	local dtype
 	dtype=$(distribution)
 
-	if [ $dtype == "redhat" ]; then
-		if [ -s /etc/redhat-release ]; then
-			cat /etc/redhat-release && uname -a
-		else
-			cat /etc/issue && uname -a
-		fi
-	elif [ $dtype == "suse" ]; then
-		cat /etc/SuSE-release
-	elif [ $dtype == "debian" ]; then
-		lsb_release -a
-		# sudo cat /etc/issue && sudo cat /etc/issue.net && sudo cat /etc/lsb_release && sudo cat /etc/os-release # Linux Mint option 2
-	elif [ $dtype == "gentoo" ]; then
-		cat /etc/gentoo-release
-	elif [ $dtype == "mandriva" ]; then
-		cat /etc/mandriva-release
-	elif [ $dtype == "slackware" ]; then
-		cat /etc/slackware-version
-	else
-		if [ -s /etc/issue ]; then
-			cat /etc/issue
-		else
-			echo "Error: Unknown distribution"
-			exit 1
-		fi
-	fi
+	case $dtype in
+		"redhat")
+			if [ -s /etc/redhat-release ]; then
+				cat /etc/redhat-release
+			else
+				cat /etc/issue
+			fi
+			uname -a
+			;;
+		"suse")
+			cat /etc/SuSE-release
+			;;
+		"debian")
+			lsb_release -a
+			;;
+		"gentoo")
+			cat /etc/gentoo-release
+			;;
+		"arch")
+			cat /etc/os-release
+			;;
+		"slackware")
+			cat /etc/slackware-version
+			;;
+		*)
+			if [ -s /etc/issue ]; then
+				cat /etc/issue
+			else
+				echo "Error: Unknown distribution"
+				exit 1
+			fi
+			;;
+	esac
 }
 
 # Automatically install the needed support files for this .bashrc file
@@ -442,57 +417,32 @@ install_bashrc_support ()
 	local dtype
 	dtype=$(distribution)
 
-	if [ $dtype == "redhat" ]; then
-		sudo yum install multitail tree joe
-	elif [ $dtype == "suse" ]; then
-		sudo zypper install multitail
-		sudo zypper install tree
-		sudo zypper install joe
-	elif [ $dtype == "debian" ]; then
-		sudo apt-get install multitail tree joe
-	elif [ $dtype == "gentoo" ]; then
-		sudo emerge multitail
-		sudo emerge tree
-		sudo emerge joe
-	elif [ $dtype == "mandriva" ]; then
-		sudo urpmi multitail
-		sudo urpmi tree
-		sudo urpmi joe
-	elif [ $dtype == "slackware" ]; then
-		echo "No install support for Slackware"
-	else
-		echo "Unknown distribution"
-	fi
-}
-
-# Show current network information
-netinfo ()
-{
-	echo "--------------- Network Information ---------------"
-	/sbin/ifconfig | awk /'inet addr/ {print $2}'
-	echo ""
-	/sbin/ifconfig | awk /'Bcast/ {print $3}'
-	echo ""
-	/sbin/ifconfig | awk /'inet addr/ {print $4}'
-
-	/sbin/ifconfig | awk /'HWaddr/ {print $4,$5}'
-	echo "---------------------------------------------------"
+	case $dtype in
+		"redhat")
+			sudo yum install multitail tree zoxide trash-cli fzf
+			;;
+		"suse")
+			sudo zypper install multitail tree zoxide trash-cli fzf
+			;;
+		"debian")
+			sudo apt-get install multitail tree zoxide trash-cli fzf
+			;;
+		"gentoo")
+			sudo emerge multitail tree zoxide trash-cli fzf
+			;;
+		"slackware")
+			echo "No install support for Slackware"
+			;;
+		*)
+			echo "Unknown distribution"
+			;;
+	esac
 }
 
 # IP address lookup
 alias whatismyip="whatsmyip"
 function whatsmyip ()
 {
-	# Dumps a list of all IP addresses for every device
-	# /sbin/ifconfig |grep -B1 "inet addr" |awk '{ if ( $1 == "inet" ) { print $2 } else if ( $2 == "Link" ) { printf "%s:" ,$1 } }' |awk -F: '{ print $1 ": " $3 }';
-	
-	### Old commands
-	# Internal IP Lookup
-	#echo -n "Internal IP: " ; /sbin/ifconfig eth0 | grep "inet addr" | awk -F: '{print $2}' | awk '{print $1}'
-#
-#	# External IP Lookup
-	#echo -n "External IP: " ; wget http://smart-ip.net/myip -O - -q
-	
 	# Internal IP Lookup.
 	if [ -e /sbin/ip ];
 	then
@@ -571,14 +521,6 @@ mysqlconfig ()
 	fi
 }
 
-# For some reason, rot13 pops up everywhere
-rot13 () {
-	if [ $# -eq 0 ]; then
-		tr '[a-m][n-z][A-M][N-Z]' '[n-z][a-m][N-Z][A-M]'
-	else
-		echo $* | tr '[a-m][n-z][A-M][N-Z]' '[n-z][a-m][N-Z][A-M]'
-	fi
-}
 
 # Trim leading and trailing spaces (for scripts)
 trim()
@@ -599,78 +541,16 @@ lazyg() {
 	git commit -m "$1"
 	git push
 }
-_z_cd() {
-    cd "$@" || return "$?"
 
-    if [ "$_ZO_ECHO" = "1" ]; then
-        echo "$PWD"
-    fi
-}
-
-z() {
-    if [ "$#" -eq 0 ]; then
-        _z_cd ~
-    elif [ "$#" -eq 1 ] && [ "$1" = '-' ]; then
-        if [ -n "$OLDPWD" ]; then
-            _z_cd "$OLDPWD"
-        else
-            echo 'zoxide: $OLDPWD is not set'
-            return 1
-        fi
-    else
-        _zoxide_result="$(zoxide query -- "$@")" && _z_cd "$_zoxide_result"
-    fi
-}
-
-zi() {
-    _zoxide_result="$(zoxide query -i -- "$@")" && _z_cd "$_zoxide_result"
-}
-
-
-alias za='zoxide add'
-
-alias zq='zoxide query'
-alias zqi='zoxide query -i'
-
-alias zr='zoxide remove'
-zri() {
-    _zoxide_result="$(zoxide query -i -- "$@")" && zoxide remove "$_zoxide_result"
-}
-
-
-_zoxide_hook() {
-    if [ -z "${_ZO_PWD}" ]; then
-        _ZO_PWD="${PWD}"
-    elif [ "${_ZO_PWD}" != "${PWD}" ]; then
-        _ZO_PWD="${PWD}"
-        zoxide add "$(pwd -L)"
-    fi
-}
-
-case "$PROMPT_COMMAND" in
-    *_zoxide_hook*) ;;
-    *) PROMPT_COMMAND="_zoxide_hook${PROMPT_COMMAND:+;${PROMPT_COMMAND}}" ;;
-esac
-alias lookingglass="~/looking-glass-B5.0.1/client/build/looking-glass-client -F"
 #######################################################
 # Set the ultimate amazing command prompt
 #######################################################
 
-alias hug="hugo server -F --bind=10.0.0.210 --baseURL=http://10.0.0.210"
+alias hug="hugo server -F --bind=10.0.0.97 --baseURL=http://10.0.0.97"
 
 export PATH=$PATH:"$HOME/.local/bin:$HOME/.cargo/bin:/var/lib/flatpak/exports/bin:/.local/share/flatpak/exports/bin"
 
 # Install Starship - curl -sS https://starship.rs/install.sh | sh
 
 eval "$(starship init bash)"
-
-#Autojump
-
-if [ -f "/usr/share/autojump/autojump.sh" ]; then
-	. /usr/share/autojump/autojump.sh
-elif [ -f "/usr/share/autojump/autojump.bash" ]; then
-	. /usr/share/autojump/autojump.bash
-else
-	echo "can't found the autojump script"
-fi
-
+eval "$(zoxide init bash)"
