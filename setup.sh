@@ -57,17 +57,26 @@ checkEnv() {
 
 installDepend() {
     ## Check for dependencies.
-    DEPENDENCIES='autojump bash bash-completion tar neovim bat'
+    DEPENDENCIES='bash bash-completion tar neovim bat tree multitail fastfetch'
     echo -e "${YELLOW}Installing dependencies...${RC}"
     if [[ $PACKAGER == "pacman" ]]; then
-        if ! command_exists yay; then
-            echo "Installing yay..."
+        if ! command_exists yay && ! command_exists paru; then
+            echo "Installing yay as AUR helper..."
             sudo ${PACKAGER} --noconfirm -S base-devel
-            $(cd /opt && sudo git clone https://aur.archlinux.org/yay-git.git && sudo chown -R ${USER}:${USER} ./yay-git && cd yay-git && makepkg --noconfirm -si)
+            cd /opt && sudo git clone https://aur.archlinux.org/yay-git.git && sudo chown -R ${USER}:${USER} ./yay-git
+            cd yay-git && makepkg --noconfirm -si
         else
-            echo "Command yay already installed"
+            echo "Aur helper already installed"
         fi
-        yay --noconfirm -S ${DEPENDENCIES}
+        if command_exists yay; then
+            AUR_HELPER="yay"
+        elif command_exists paru; then
+            AUR_HELPER="paru"
+        else
+            echo "No AUR helper found. Please install yay or paru."
+            exit 1
+        fi
+        ${AUR_HELPER} --noconfirm -S ${DEPENDENCIES}
     else
         sudo ${PACKAGER} install -yq ${DEPENDENCIES}
     fi
