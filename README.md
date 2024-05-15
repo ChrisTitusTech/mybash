@@ -20,13 +20,14 @@ The `.bashrc` file is a script that runs every time a new terminal session is st
 ### System-Specific Aliases and Settings
 
 - **Editor Settings**: Sets `nvim` (NeoVim) as the default editor.
-- **Conditional Aliases**: Depending on the system type (like Fedora), it sets specific aliases, e.g., replacing `batcat` with `bat`.
+- **Conditional Aliases**: Depending on the system type (like Fedora), it sets specific aliases, e.g., replacing `cat` with `bat`.
 
 ### Enhancements and Utilities
 
 - **Color and Formatting**: Enhancements for command output readability using colors and formatting for tools like `ls`, `grep`, and `man`.
 - **Navigation Shortcuts**: Aliases to simplify directory navigation, e.g., `alias ..='cd ..'` to go up one directory.
 - **Safety Features**: Aliases for safer file operations, like using `trash` instead of `rm` for deleting files, to prevent accidental data loss.
+- **Extensive Zoxide support**: Easily navigate with `z`, `zi`, or pressing Ctrl+f to launch zi to see frequently used navigation directories.
 
 ### Advanced Functions
 
