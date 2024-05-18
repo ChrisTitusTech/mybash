@@ -6,28 +6,31 @@ YELLOW='\e[33m'
 GREEN='\e[32m'
 
 command_exists() {
-    command -v $1 >/dev/null 2>&1
+    command -v "$1" >/dev/null 2>&1
 }
 
 checkEnv() {
     ## Check for requirements.
     REQUIREMENTS='curl groups sudo'
-    if ! command_exists ${REQUIREMENTS}; then
-        echo -e "${RED}To run me, you need: ${REQUIREMENTS}${RC}"
-        exit 1
-    fi
+    for req in ${REQUIREMENTS}; do
+        if ! command_exists ${req}; then
+            echo -e "${RED}To run me, you need: ${REQUIREMENTS}${RC}"
+            exit 1
+        fi
+    done
 
-    ## Check Package Handeler
-    PACKAGEMANAGER='apt yum dnf pacman zypper'
+    ## Check Package Manager
+    PACKAGEMANAGER='nala apt yum dnf pacman zypper'
     for pgm in ${PACKAGEMANAGER}; do
         if command_exists ${pgm}; then
             PACKAGER=${pgm}
             echo -e "Using ${pgm}"
+            break
         fi
     done
 
     if [ -z "${PACKAGER}" ]; then
-        echo -e "${RED}Can't find a supported package manager"
+        echo -e "${RED}Can't find a supported package manager${RC}"
         exit 1
     fi
 
@@ -41,23 +44,27 @@ checkEnv() {
     ## Check SuperUser Group
     SUPERUSERGROUP='wheel sudo root'
     for sug in ${SUPERUSERGROUP}; do
-        if groups | grep ${sug}; then
+        if groups | (command_exists rg && rg -q ${sug} || grep -q ${sug}); then
             SUGROUP=${sug}
             echo -e "Super user group ${SUGROUP}"
+            break
         fi
     done
 
     ## Check if member of the sudo group.
-    if ! groups | grep ${SUGROUP} >/dev/null; then
-        echo -e "${RED}You need to be a member of the sudo group to run me!"
+    if ! groups | (command_exists rg && rg -q ${SUGROUP} || grep -q ${SUGROUP}); then
+        echo -e "${RED}You need to be a member of the sudo group to run me!${RC}"
         exit 1
     fi
-
 }
 
 installDepend() {
     ## Check for dependencies.
-    DEPENDENCIES='bash bash-completion tar neovim bat tree multitail fastfetch'
+    DEPENDENCIES='bash bash-completion tar bat tree multitail fastfetch'
+    if ! command_exists nvim; then
+        DEPENDENCIES="${DEPENDENCIES} neovim"
+    fi
+
     echo -e "${YELLOW}Installing dependencies...${RC}"
     if [[ $PACKAGER == "pacman" ]]; then
         if ! command_exists yay && ! command_exists paru; then
@@ -66,7 +73,7 @@ installDepend() {
             cd /opt && sudo git clone https://aur.archlinux.org/yay-git.git && sudo chown -R ${USER}:${USER} ./yay-git
             cd yay-git && makepkg --noconfirm -si
         else
-            echo "Aur helper already installed"
+            echo "AUR helper already installed"
         fi
         if command_exists yay; then
             AUR_HELPER="yay"
@@ -77,6 +84,8 @@ installDepend() {
             exit 1
         fi
         ${AUR_HELPER} --noconfirm -S ${DEPENDENCIES}
+    elif [[ $PACKAGER == "nala" ]]; then
+        sudo ${PACKAGER} install -y ${DEPENDENCIES}
     else
         sudo ${PACKAGER} install -yq ${DEPENDENCIES}
     fi
@@ -113,8 +122,8 @@ installZoxide() {
 }
 
 install_additional_dependencies() {
-   sudo apt update
-   sudo apt install -y trash-cli bat meld jpico
+    sudo apt update
+    sudo apt install -y trash-cli bat meld jpico
 }
 
 linkConfig() {
@@ -143,7 +152,8 @@ installZoxide
 install_additional_dependencies
 
 if linkConfig; then
-    echo -e "${GREEN}Done!\nrestart your shell to see the changes.${RC}"
+    echo -e "${GREEN}Done!\nRestart your shell to see the changes.${RC}"
 else
     echo -e "${RED}Something went wrong!${RC}"
 fi
+
