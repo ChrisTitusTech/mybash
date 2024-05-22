@@ -57,7 +57,7 @@ checkEnv() {
 
 installDepend() {
     ## Check for dependencies.
-    DEPENDENCIES='bash bash-completion tar neovim bat tree multitail fastfetch'
+    DEPENDENCIES='bash bash-completion tar neovim bat tree multitail fastfetch hstr-git'
     echo -e "${YELLOW}Installing dependencies...${RC}"
     if [[ $PACKAGER == "pacman" ]]; then
         if ! command_exists yay && ! command_exists paru; then
@@ -112,15 +112,28 @@ installZoxide() {
     fi
 }
 
+installFzfcompletion() {
+ ## Get the correct user home directory.
+    USER_HOME=$(getent passwd ${SUDO_USER:-$USER} | cut -d: -f6)
+
+	if [ ! -d ${USER_HOME}/.local/scripts ]  # Check if directory doesn't exist
+	then
+		mkdir -p ${USER_HOME}/.local/scripts
+		echo "Directory created successfully"
+	else
+		echo "Directory already exists"
+	fi
+}
+
 install_additional_dependencies() {
    sudo apt update
    sudo apt install -y trash-cli bat meld jpico
 }
 
 linkConfig() {
-    ## Get the correct user home directory.
+ ## Get the correct user home directory.
     USER_HOME=$(getent passwd ${SUDO_USER:-$USER} | cut -d: -f6)
-    ## Check if a bashrc file is already there.
+       ## Check if a bashrc file is already there.
     OLD_BASHRC="${USER_HOME}/.bashrc"
     if [[ -e ${OLD_BASHRC} ]]; then
         echo -e "${YELLOW}Moving old bash config file to ${USER_HOME}/.bashrc.bak${RC}"
@@ -134,12 +147,14 @@ linkConfig() {
     ## Make symbolic link.
     ln -svf ${GITPATH}/.bashrc ${USER_HOME}/.bashrc
     ln -svf ${GITPATH}/starship.toml ${USER_HOME}/.config/starship.toml
+    ln -svf ${GITPATH}/.local/scripts/fzf-bash-completion.sh ${USER_HOME}/.local/scripts/fzf-bash-completion.sh
 }
 
 checkEnv
 installDepend
 installStarship
 installZoxide
+installFzfcompletion
 install_additional_dependencies
 
 if linkConfig; then
