@@ -117,6 +117,10 @@ install_additional_dependencies() {
    sudo apt install -y trash-cli bat meld jpico
 }
 
+create_fastfetch_config() {
+    fastfetch --gen-config
+}
+
 linkConfig() {
     ## Get the correct user home directory.
     USER_HOME=$(getent passwd ${SUDO_USER:-$USER} | cut -d: -f6)
@@ -134,6 +138,8 @@ linkConfig() {
     ## Make symbolic link.
     ln -svf ${GITPATH}/.bashrc ${USER_HOME}/.bashrc
     ln -svf ${GITPATH}/starship.toml ${USER_HOME}/.config/starship.toml
+    echo -e "${YELLOW}Linking custom fastfetch config file...${RC}"
+    ln -svf ${GITPATH}/config.jsonc ${USER_HOME}/.config/fastfetch/config.jsonc
 }
 
 checkEnv
@@ -141,6 +147,7 @@ installDepend
 installStarship
 installZoxide
 install_additional_dependencies
+create_fastfetch_config
 
 if linkConfig; then
     echo -e "${GREEN}Done!\nrestart your shell to see the changes.${RC}"
