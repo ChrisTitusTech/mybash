@@ -136,6 +136,9 @@ alias freshclam='sudo freshclam'
 alias vi='nvim'
 alias svi='sudo vi'
 alias vis='nvim "+set si"'
+alias lla='ls -Al'
+alias la='ls -A'
+alias ll='ls -l'
 
 # Change directory aliases
 alias home='cd ~'
