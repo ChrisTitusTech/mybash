@@ -549,6 +549,25 @@ lazyg() {
 	git push
 }
 
+function hb {
+    if [ $# -eq 0 ]; then
+        echo "No file path specified."
+        return
+    elif [ ! -f "$1" ]; then
+        echo "File path does not exist."
+        return
+    fi
+
+    uri="http://bin.christitus.com/documents"
+    response=$(curl -s -X POST -d "$(cat "$1")" "$uri")
+    if [ $? -eq 0 ]; then
+        hasteKey=$(echo $response | jq -r '.key')
+        echo "http://bin.christitus.com/$hasteKey"
+    else
+        echo "Failed to upload the document."
+    fi
+}
+
 #######################################################
 # Set the ultimate amazing command prompt
 #######################################################
@@ -561,3 +580,6 @@ export PATH=$PATH:"$HOME/.local/bin:$HOME/.cargo/bin:/var/lib/flatpak/exports/bi
 # Install Starship - curl -sS https://starship.rs/install.sh | sh
 eval "$(starship init bash)"
 eval "$(zoxide init bash)"
+
+[[ -f ~/.bash-preexec.sh ]] && source ~/.bash-preexec.sh
+eval "$(atuin init bash)"
