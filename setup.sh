@@ -79,7 +79,7 @@ checkEnv() {
 
 installDepend() {
     ## Check for dependencies.
-    DEPENDENCIES='bash bash-completion tar neovim bat tree multitail fastfetch'
+    DEPENDENCIES='bash bash-completion tar tree multitail fastfetch tldr trash-cli'
     echo -e "${YELLOW}Installing dependencies...${RC}"
     if [[ $PACKAGER == "pacman" ]]; then
         if ! command_exists yay && ! command_exists paru; then
@@ -135,8 +135,28 @@ installZoxide() {
 }
 
 install_additional_dependencies() {
-   sudo apt update
-   sudo apt install -y trash-cli bat meld jpico
+    case $(command -v apt || command -v zypper || command -v dnf || command -v pacman) in
+        *apt)
+            sudo apt update
+            sudo apt install -y neovim bat
+            ;;
+        *zypper)
+            sudo zypper refresh
+            sudo zypper install -y neovim bat
+            ;;
+        *dnf)
+            sudo dnf check-update
+            sudo dnf install -y neovim bat
+            ;;
+        *pacman)
+            sudo pacman -Syu
+            sudo pacman -S --noconfirm neovim bat
+            ;;
+        *)
+            echo "No supported package manager found. Please install neovim and bat manually."
+            exit 1
+            ;;
+    esac
 }
 
 linkConfig() {
