@@ -137,23 +137,26 @@ installZoxide() {
 install_additional_dependencies() {
     case $(command -v apt || command -v zypper || command -v dnf || command -v pacman) in
         *apt)
-            sudo apt update
-            sudo apt install -y neovim bat
+            curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim.appimage
+            chmod u+x nvim.appimage
+            ./nvim.appimage --appimage-extract
+            sudo mv squashfs-root /opt/neovim
+            sudo ln -s /opt/neovim/AppRun /usr/bin/nvim
             ;;
         *zypper)
             sudo zypper refresh
-            sudo zypper install -y neovim bat
+            sudo zypper install -y neovim 
             ;;
         *dnf)
             sudo dnf check-update
-            sudo dnf install -y neovim bat
+            sudo dnf install -y neovim 
             ;;
         *pacman)
             sudo pacman -Syu
-            sudo pacman -S --noconfirm neovim bat
+            sudo pacman -S --noconfirm neovim 
             ;;
         *)
-            echo "No supported package manager found. Please install neovim and bat manually."
+            echo "No supported package manager found. Please install neovim manually."
             exit 1
             ;;
     esac
