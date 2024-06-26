@@ -227,6 +227,14 @@ alias clickpaste='sleep 3; xdotool type "$(xclip -o -selection clipboard)"'
 
 alias kssh="kitty +kitten ssh"
 
+# alias to cleanup unused docker containers, images, networks, and volumes
+
+alias docker-clean=' \
+  docker container prune -f ; \
+  docker image prune -f ; \
+  docker network prune -f ; \
+  docker volume prune -f '
+
 #######################################################
 # SPECIAL FUNCTIONS
 #######################################################
