@@ -40,7 +40,7 @@ checkEnv() {
     fi
 
     ## Check Package Handeler
-    PACKAGEMANAGER='apt yum dnf pacman zypper'
+    PACKAGEMANAGER='apt yum dnf pacman zypper emerge xbps-install nix-env'
     for pgm in ${PACKAGEMANAGER}; do
         if command_exists ${pgm}; then
             PACKAGER=${pgm}
@@ -53,6 +53,16 @@ checkEnv() {
         exit 1
     fi
 
+    if command_exists sudo; then
+        SUDO_CMD="sudo"
+    elif command_exists doas && [ -f "/etc/doas.conf" ]; then
+        SUDO_CMD="doas"
+    else
+        SUDO_CMD="su -c"
+    fi
+
+    echo "Using ${SUDO_CMD} as privilege escalation software"
+    
     ## Check if the current directory is writable.
     GITPATH="$(dirname "$(realpath "$0")")"
     if [[ ! -w ${GITPATH} ]]; then
@@ -79,16 +89,16 @@ checkEnv() {
 
 installDepend() {
     ## Check for dependencies.
-    DEPENDENCIES='bash bash-completion tar tree multitail fastfetch tldr trash-cli'
+    DEPENDENCIES='bash bash-completion tar neovim bat tree multitail fastfetch'
     echo -e "${YELLOW}Installing dependencies...${RC}"
     if [[ $PACKAGER == "pacman" ]]; then
         if ! command_exists yay && ! command_exists paru; then
             echo "Installing yay as AUR helper..."
-            sudo ${PACKAGER} --noconfirm -S base-devel
-            cd /opt && sudo git clone https://aur.archlinux.org/yay-git.git && sudo chown -R ${USER}:${USER} ./yay-git
+            ${SUDO_CMD} ${PACKAGER} --noconfirm -S base-devel
+            cd /opt && ${SUDO_CMD} git clone https://aur.archlinux.org/yay-git.git && ${SUDO_CMD} chown -R ${USER}:${USER} ./yay-git
             cd yay-git && makepkg --noconfirm -si
         else
-            echo "Aur helper already installed"
+            echo "AUR helper already installed"
         fi
         if command_exists yay; then
             AUR_HELPER="yay"
@@ -99,8 +109,14 @@ installDepend() {
             exit 1
         fi
         ${AUR_HELPER} --noconfirm -S ${DEPENDENCIES}
+    elif [[ $PACKAGER == "emerge" ]]; then
+        ${PACKAGER} -v app-shells/bash app-shells/bash-completion app-arch/tar app-editors/neovim sys-apps/bat app-text/tree app-text/multitail app-misc/fastfetch
+    elif [[ $PACKAGER == "xbps-install" ]]; then
+        ${PACKAGER} -v ${DEPENDENCIES}
+    elif [[ $PACKAGER == "nix-env" ]]; then
+        ${PACKAGER} -iA nixos.bash nixos.bash-completion nixos.gnutar nixos.neovim nixos.bat nixos.tree nixos.multitail nixos.fastfetch
     else
-        sudo ${PACKAGER} install -yq ${DEPENDENCIES}
+        ${SUDO_CMD} ${PACKAGER} install -yq ${DEPENDENCIES}
     fi
 }
 
@@ -135,25 +151,25 @@ installZoxide() {
 }
 
 install_additional_dependencies() {
-    case $(command -v apt || command -v zypper || command -v dnf || command -v pacman) in
+   case $(command -v apt || command -v zypper || command -v dnf || command -v pacman) in
         *apt)
             curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim.appimage
             chmod u+x nvim.appimage
             ./nvim.appimage --appimage-extract
-            sudo mv squashfs-root /opt/neovim
-            sudo ln -s /opt/neovim/AppRun /usr/bin/nvim
+            ${SUDO_CMD} mv squashfs-root /opt/neovim
+            ${SUDO_CMD} ln -s /opt/neovim/AppRun /usr/bin/nvim
             ;;
         *zypper)
-            sudo zypper refresh
-            sudo zypper install -y neovim 
+            ${SUDO_CMD} zypper refresh
+            ${SUDO_CMD} zypper install -y neovim 
             ;;
         *dnf)
-            sudo dnf check-update
-            sudo dnf install -y neovim 
+            ${SUDO_CMD} dnf check-update
+            ${SUDO_CMD} dnf install -y neovim 
             ;;
         *pacman)
-            sudo pacman -Syu
-            sudo pacman -S --noconfirm neovim 
+            ${SUDO_CMD} pacman -Syu
+            ${SUDO_CMD} pacman -S --noconfirm neovim 
             ;;
         *)
             echo "No supported package manager found. Please install neovim manually."
