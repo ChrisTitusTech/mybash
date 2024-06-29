@@ -29,28 +29,32 @@ fi
 cd "$LINUXTOOLBOXDIR/mybash" || exit
 
 command_exists() {
-    command -v $1 >/dev/null 2>&1
+    command -v "$1" >/dev/null 2>&1
 }
 
 checkEnv() {
     ## Check for requirements.
     REQUIREMENTS='curl groups sudo'
-    if ! command_exists ${REQUIREMENTS}; then
-        echo -e "${RED}To run me, you need: ${REQUIREMENTS}${RC}"
-        exit 1
-    fi
+    for req in ${REQUIREMENTS}; do
+        if ! command_exists ${req}; then
+            echo -e "${RED}To run me, you need: ${REQUIREMENTS}${RC}"
+            exit 1
+        fi
+    done
 
     ## Check Package Handeler
-    PACKAGEMANAGER='apt yum dnf pacman zypper emerge xbps-install nix-env'
+    PACKAGEMANAGER='nala apt yum dnf pacman zypper emerge xbps-install nix-env'
+
     for pgm in ${PACKAGEMANAGER}; do
         if command_exists ${pgm}; then
             PACKAGER=${pgm}
             echo -e "Using ${pgm}"
+            break
         fi
     done
 
     if [ -z "${PACKAGER}" ]; then
-        echo -e "${RED}Can't find a supported package manager"
+        echo -e "${RED}Can't find a supported package manager${RC}"
         exit 1
     fi
 
@@ -74,23 +78,27 @@ checkEnv() {
     ## Check SuperUser Group
     SUPERUSERGROUP='wheel sudo root'
     for sug in ${SUPERUSERGROUP}; do
-        if groups | grep ${sug}; then
+        if groups | (command_exists rg && rg -q ${sug} || grep -q ${sug}); then
             SUGROUP=${sug}
             echo -e "Super user group ${SUGROUP}"
+            break
         fi
     done
 
     ## Check if member of the sudo group.
-    if ! groups | grep ${SUGROUP} >/dev/null; then
-        echo -e "${RED}You need to be a member of the sudo group to run me!"
+    if ! groups | (command_exists rg && rg -q ${SUGROUP} || grep -q ${SUGROUP}); then
+        echo -e "${RED}You need to be a member of the sudo group to run me!${RC}"
         exit 1
     fi
-
 }
 
 installDepend() {
     ## Check for dependencies.
-    DEPENDENCIES='bash bash-completion tar neovim bat tree multitail fastfetch'
+    DEPENDENCIES='bash bash-completion tar bat tree multitail fastfetch'
+    if ! command_exists nvim; then
+        DEPENDENCIES="${DEPENDENCIES} neovim"
+    fi
+
     echo -e "${YELLOW}Installing dependencies...${RC}"
     if [[ $PACKAGER == "pacman" ]]; then
         if ! command_exists yay && ! command_exists paru; then
@@ -110,12 +118,14 @@ installDepend() {
             exit 1
         fi
         ${AUR_HELPER} --noconfirm -S ${DEPENDENCIES}
+    elif [[ $PACKAGER == "nala" ]]; then
+        ${SUDO_CMD} ${PACKAGER} install -y ${DEPENDENCIES}
     elif [[ $PACKAGER == "emerge" ]]; then
-        ${PACKAGER} -v app-shells/bash app-shells/bash-completion app-arch/tar app-editors/neovim sys-apps/bat app-text/tree app-text/multitail app-misc/fastfetch
+        ${SUDO_CMD} ${PACKAGER} -v app-shells/bash app-shells/bash-completion app-arch/tar app-editors/neovim sys-apps/bat app-text/tree app-text/multitail app-misc/fastfetch
     elif [[ $PACKAGER == "xbps-install" ]]; then
-        ${PACKAGER} -v ${DEPENDENCIES}
+        ${SUDO_CMD} ${PACKAGER} -v ${DEPENDENCIES}
     elif [[ $PACKAGER == "nix-env" ]]; then
-        ${PACKAGER} -iA nixos.bash nixos.bash-completion nixos.gnutar nixos.neovim nixos.bat nixos.tree nixos.multitail nixos.fastfetch
+        ${SUDO_CMD} ${PACKAGER} -iA nixos.bash nixos.bash-completion nixos.gnutar nixos.neovim nixos.bat nixos.tree nixos.multitail nixos.fastfetch
     else
         ${SUDO_CMD} ${PACKAGER} install -yq ${DEPENDENCIES}
     fi
@@ -205,7 +215,8 @@ installZoxide
 install_additional_dependencies
 
 if linkConfig; then
-    echo -e "${GREEN}Done!\nrestart your shell to see the changes.${RC}"
+    echo -e "${GREEN}Done!\nRestart your shell to see the changes.${RC}"
 else
     echo -e "${RED}Something went wrong!${RC}"
 fi
+
