@@ -15,4 +15,7 @@ jobs:
 
     - name: Lint Bash scripts
       run: |
-        find . -name "*.sh" -print0 | xargs -0 shellcheck
+        find . -name "*.sh" -print0 | xargs -0 shellcheck -f gcc | tee shellcheck.log
+        if grep -q "error:" shellcheck.log; then
+          exit 1
+        fi

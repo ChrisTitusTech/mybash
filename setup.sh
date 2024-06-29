@@ -25,7 +25,8 @@ if [[ ! -d "$LINUXTOOLBOXDIR/mybash" ]]; then
     fi
 fi
 
-cd "$LINUXTOOLBOXDIR/mybash"
+
+cd "$LINUXTOOLBOXDIR/mybash" || exit
 
 command_exists() {
     command -v $1 >/dev/null 2>&1
