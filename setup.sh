@@ -22,7 +22,7 @@ if [[ ! -d "$LINUXTOOLBOXDIR/mybash" ]]; then
     else
         echo -e "${RED}Failed to clone mybash repository${RC}"
         exit 1
-    f
+    fi
 fi
 
 
