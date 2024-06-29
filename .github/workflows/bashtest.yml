@@ -1,0 +1,18 @@
+name: Bash Lint
+
+on: [push, pull_request]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Install ShellCheck
+      run: sudo apt-get install -y shellcheck
+
+    - name: Lint Bash scripts
+      run: |
+        find . -name "*.sh" -print0 | xargs -0 shellcheck
