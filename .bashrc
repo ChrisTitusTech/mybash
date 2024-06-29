@@ -30,6 +30,7 @@ if [[ $iatest -gt 0 ]]; then bind "set bell-style visible"; fi
 # Expand the history size
 export HISTFILESIZE=10000
 export HISTSIZE=500
+export HISTTIMEFORMAT="%F %T" # add timestamp to history
 
 # Don't put duplicate lines in the history and do not add lines that start with a space
 export HISTCONTROL=erasedups:ignoredups:ignorespace
@@ -145,6 +146,7 @@ alias vi='nvim'
 alias svi='sudo vi'
 alias vis='nvim "+set si"'
 
+
 # Change directory aliases
 alias home='cd ~'
 alias cd..='cd ..'
@@ -171,9 +173,12 @@ alias lt='ls -ltrh'               # sort by date
 alias lm='ls -alh |more'          # pipe through 'more'
 alias lw='ls -xAh'                # wide listing format
 alias ll='ls -Fls'                # long listing format
-alias labc='ls -lap'              #alphabetical sort
+alias labc='ls -lap'              # alphabetical sort
 alias lf="ls -l | egrep -v '^d'"  # files only
 alias ldir="ls -l | egrep '^d'"   # directories only
+alias lla='ls -Al'                # List and Hidden Files
+alias las='ls -A'                 # Hidden Files
+alias lls='ls -l'                 # List
 
 # alias chmod commands
 alias mx='chmod a+x'
@@ -233,6 +238,14 @@ alias clickpaste='sleep 3; xdotool type "$(xclip -o -selection clipboard)"'
 # KITTY - alias to be able to use kitty features when connecting to remote servers(e.g use tmux on remote server)
 
 alias kssh="kitty +kitten ssh"
+
+# alias to cleanup unused docker containers, images, networks, and volumes
+
+alias docker-clean=' \
+  docker container prune -f ; \
+  docker image prune -f ; \
+  docker network prune -f ; \
+  docker volume prune -f '
 
 #######################################################
 # SPECIAL FUNCTIONS
@@ -367,14 +380,38 @@ distribution ()
 			gentoo)
 				dtype="gentoo"
 				;;
-			arch)
+			arch|manjaro)
 				dtype="arch"
 				;;
 			slackware)
 				dtype="slackware"
 				;;
 			*)
-				# If ID is not recognized, keep dtype as unknown
+				# Check ID_LIKE only if dtype is still unknown
+				if [ -n "$ID_LIKE" ]; then
+					case $ID_LIKE in
+						*fedora*|*rhel*|*centos*)
+							dtype="redhat"
+							;;
+						*sles*|*opensuse*)
+							dtype="suse"
+							;;
+						*ubuntu*|*debian*)
+							dtype="debian"
+							;;
+						*gentoo*)
+							dtype="gentoo"
+							;;
+						*arch*)
+							dtype="arch"
+							;;
+						*slackware*)
+							dtype="slackware"
+							;;
+					esac
+				fi
+
+				# If ID or ID_LIKE is not recognized, keep dtype as unknown
 				;;
 		esac
 	fi
