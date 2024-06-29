@@ -371,7 +371,7 @@ distribution ()
 			gentoo)
 				dtype="gentoo"
 				;;
-			arch)
+			arch|manjaro)
 				dtype="arch"
 				;;
 			slackware)
