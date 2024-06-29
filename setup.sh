@@ -148,15 +148,15 @@ install_additional_dependencies() {
             ;;
         *zypper)
             sudo zypper refresh
-            sudo zypper install -y neovim 
+            sudo zypper install -y neovim
             ;;
         *dnf)
             sudo dnf check-update
-            sudo dnf install -y neovim 
+            sudo dnf install -y neovim
             ;;
         *pacman)
             sudo pacman -Syu
-            sudo pacman -S --noconfirm neovim 
+            sudo pacman -S --noconfirm neovim
             ;;
         *)
             echo "No supported package manager found. Please install neovim manually."
