@@ -26,6 +26,7 @@
         },
         {
             "type": "gpu",
+            "detectionMethod": "pci",
             "key": "  "
         },
         {
