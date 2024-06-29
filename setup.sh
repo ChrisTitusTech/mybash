@@ -5,6 +5,28 @@ RED='\e[31m'
 YELLOW='\e[33m'
 GREEN='\e[32m'
 
+# Check if the home directory and linuxtoolbox folder exist, create them if they don't
+LINUXTOOLBOXDIR="$HOME/linuxtoolbox"
+
+if [[ ! -d "$LINUXTOOLBOXDIR" ]]; then
+    echo -e "${YELLOW}Creating linuxtoolbox directory: $LINUXTOOLBOXDIR${RC}"
+    mkdir -p "$LINUXTOOLBOXDIR"
+    echo -e "${GREEN}linuxtoolbox directory created: $LINUXTOOLBOXDIR${RC}"
+fi
+
+if [[ ! -d "$LINUXTOOLBOXDIR/mybash" ]]; then
+    echo -e "${YELLOW}Cloning mybash repository into: $LINUXTOOLBOXDIR/mybash${RC}"
+    git clone https://github.com/ChrisTitusTech/mybash "$LINUXTOOLBOXDIR/mybash"
+    if [[ $? -eq 0 ]]; then
+        echo -e "${GREEN}Successfully cloned mybash repository${RC}"
+    else
+        echo -e "${RED}Failed to clone mybash repository${RC}"
+        exit 1
+    fi
+fi
+
+cd "$LINUXTOOLBOXDIR/mybash"
+
 command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
@@ -19,8 +41,9 @@ checkEnv() {
         fi
     done
 
-    ## Check Package Manager
-    PACKAGEMANAGER='nala apt yum dnf pacman zypper'
+    ## Check Package Handeler
+    PACKAGEMANAGER='nala apt yum dnf pacman zypper emerge xbps-install nix-env'
+
     for pgm in ${PACKAGEMANAGER}; do
         if command_exists ${pgm}; then
             PACKAGER=${pgm}
@@ -34,6 +57,16 @@ checkEnv() {
         exit 1
     fi
 
+    if command_exists sudo; then
+        SUDO_CMD="sudo"
+    elif command_exists doas && [ -f "/etc/doas.conf" ]; then
+        SUDO_CMD="doas"
+    else
+        SUDO_CMD="su -c"
+    fi
+
+    echo "Using ${SUDO_CMD} as privilege escalation software"
+    
     ## Check if the current directory is writable.
     GITPATH="$(dirname "$(realpath "$0")")"
     if [[ ! -w ${GITPATH} ]]; then
@@ -69,8 +102,8 @@ installDepend() {
     if [[ $PACKAGER == "pacman" ]]; then
         if ! command_exists yay && ! command_exists paru; then
             echo "Installing yay as AUR helper..."
-            sudo ${PACKAGER} --noconfirm -S base-devel
-            cd /opt && sudo git clone https://aur.archlinux.org/yay-git.git && sudo chown -R ${USER}:${USER} ./yay-git
+            ${SUDO_CMD} ${PACKAGER} --noconfirm -S base-devel
+            cd /opt && ${SUDO_CMD} git clone https://aur.archlinux.org/yay-git.git && ${SUDO_CMD} chown -R ${USER}:${USER} ./yay-git
             cd yay-git && makepkg --noconfirm -si
         else
             echo "AUR helper already installed"
@@ -85,9 +118,15 @@ installDepend() {
         fi
         ${AUR_HELPER} --noconfirm -S ${DEPENDENCIES}
     elif [[ $PACKAGER == "nala" ]]; then
-        sudo ${PACKAGER} install -y ${DEPENDENCIES}
+        ${SUDO_CMD} ${PACKAGER} install -y ${DEPENDENCIES}
+    elif [[ $PACKAGER == "emerge" ]]; then
+        ${SUDO_CMD} ${PACKAGER} -v app-shells/bash app-shells/bash-completion app-arch/tar app-editors/neovim sys-apps/bat app-text/tree app-text/multitail app-misc/fastfetch
+    elif [[ $PACKAGER == "xbps-install" ]]; then
+        ${SUDO_CMD} ${PACKAGER} -v ${DEPENDENCIES}
+    elif [[ $PACKAGER == "nix-env" ]]; then
+        ${SUDO_CMD} ${PACKAGER} -iA nixos.bash nixos.bash-completion nixos.gnutar nixos.neovim nixos.bat nixos.tree nixos.multitail nixos.fastfetch
     else
-        sudo ${PACKAGER} install -yq ${DEPENDENCIES}
+        ${SUDO_CMD} ${PACKAGER} install -yq ${DEPENDENCIES}
     fi
 }
 
@@ -122,8 +161,31 @@ installZoxide() {
 }
 
 install_additional_dependencies() {
-    sudo apt update
-    sudo apt install -y trash-cli bat meld jpico
+   case $(command -v apt || command -v zypper || command -v dnf || command -v pacman) in
+        *apt)
+            curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim.appimage
+            chmod u+x nvim.appimage
+            ./nvim.appimage --appimage-extract
+            ${SUDO_CMD} mv squashfs-root /opt/neovim
+            ${SUDO_CMD} ln -s /opt/neovim/AppRun /usr/bin/nvim
+            ;;
+        *zypper)
+            ${SUDO_CMD} zypper refresh
+            ${SUDO_CMD} zypper install -y neovim 
+            ;;
+        *dnf)
+            ${SUDO_CMD} dnf check-update
+            ${SUDO_CMD} dnf install -y neovim 
+            ;;
+        *pacman)
+            ${SUDO_CMD} pacman -Syu
+            ${SUDO_CMD} pacman -S --noconfirm neovim 
+            ;;
+        *)
+            echo "No supported package manager found. Please install neovim manually."
+            exit 1
+            ;;
+    esac
 }
 
 linkConfig() {
