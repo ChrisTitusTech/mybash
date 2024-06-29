@@ -145,6 +145,7 @@ alias vi='nvim'
 alias svi='sudo vi'
 alias vis='nvim "+set si"'
 
+
 # Change directory aliases
 alias home='cd ~'
 alias cd..='cd ..'
@@ -171,9 +172,12 @@ alias lt='ls -ltrh'               # sort by date
 alias lm='ls -alh |more'          # pipe through 'more'
 alias lw='ls -xAh'                # wide listing format
 alias ll='ls -Fls'                # long listing format
-alias labc='ls -lap'              #alphabetical sort
+alias labc='ls -lap'              # alphabetical sort
 alias lf="ls -l | egrep -v '^d'"  # files only
 alias ldir="ls -l | egrep '^d'"   # directories only
+alias lla='ls -Al'                # List and Hidden Files
+alias las='ls -A'                 # Hidden Files
+alias lls='ls -l'                 # List
 
 # alias chmod commands
 alias mx='chmod a+x'
