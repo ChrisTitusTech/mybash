@@ -172,7 +172,7 @@ install_additional_dependencies() {
             ;;
         *zypper)
             ${SUDO_CMD} zypper refresh
-            ${SUDO_CMD} zypper install -y neovim 
+            ${SUDO_CMD} zypper -n install neovim # -y doesn't work on opensuse -n is short for -non-interactive which is equivalent to -y
             ;;
         *dnf)
             ${SUDO_CMD} dnf check-update
