@@ -184,22 +184,18 @@ install_additional_dependencies() {
             ./nvim.appimage --appimage-extract
             ${SUDO_CMD} mv squashfs-root /opt/neovim
             ${SUDO_CMD} ln -s /opt/neovim/AppRun /usr/bin/nvim
-            echo "apt"
             ;;
         *zypper)
             ${SUDO_CMD} zypper refresh
             ${SUDO_CMD} zypper install -y neovim
-            echo "zypper"
             ;;
         *dnf)
             ${SUDO_CMD} dnf check-update
             ${SUDO_CMD} dnf install -y neovim
-            echo "dnf"
             ;;
         *pacman)
             ${SUDO_CMD} pacman -Syu
             ${SUDO_CMD} pacman -S --noconfirm neovim
-            echo "pacman"
             ;;
         *)
             echo "No supported package manager found. Please install neovim manually."
