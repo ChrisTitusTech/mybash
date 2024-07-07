@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# use bin/env bash as cannot be sure that bash actually exists at bin/bash
 
 RC='\e[0m'
 RED='\e[31m'
@@ -25,6 +26,11 @@ if [[ ! -d "$LINUXTOOLBOXDIR/mybash" ]]; then
     fi
 fi
 
+# add variables to top level so can easily be accessed by all functions
+PACKAGER=""
+SUDO_CMD=""
+SUGROUP=""
+GITPATH=""
 
 cd "$LINUXTOOLBOXDIR/mybash" || exit
 
@@ -34,8 +40,10 @@ command_exists() {
 
 checkEnv() {
     ## Check for requirements.
-    REQUIREMENTS='curl groups sudo'
-    for req in ${REQUIREMENTS}; do
+    # use local as it is more correct bash
+    # use arrays instead of splitting
+    local REQUIREMENTS=(curl groups sudo)
+    for req in "${REQUIREMENTS[@]}"; do
         if ! command_exists ${req}; then
             echo -e "${RED}To run me, you need: ${REQUIREMENTS}${RC}"
             exit 1
@@ -43,9 +51,9 @@ checkEnv() {
     done
 
     ## Check Package Handeler
-    PACKAGEMANAGER='nala apt yum dnf pacman zypper emerge xbps-install nix-env'
+    local PACKAGEMANAGER=(nala apt dnf yum pacman zypper emerge xbps-install nix-env)
 
-    for pgm in ${PACKAGEMANAGER}; do
+    for pgm in "${PACKAGEMANAGER[@]}"; do
         if command_exists ${pgm}; then
             PACKAGER=${pgm}
             echo -e "Using ${pgm}"
@@ -66,21 +74,22 @@ checkEnv() {
         SUDO_CMD="su -c"
     fi
 
-    echo "Using ${SUDO_CMD} as privilege escalation software"
-    
+    echo "Using $SUDO_CMD as privilege escalation software"
+
     ## Check if the current directory is writable.
-    GITPATH="$(dirname "$(realpath "$0")")"
-    if [[ ! -w ${GITPATH} ]]; then
-        echo -e "${RED}Can't write to ${GITPATH}${RC}"
+    # we cd'd into this directory before this function so we can use the PWD var
+    if [[ ! -w "$PWD" ]]; then
+        echo -e "${RED}Can't write to ${PWD}${RC}"
         exit 1
     fi
 
     ## Check SuperUser Group
-    SUPERUSERGROUP='wheel sudo root'
-    for sug in ${SUPERUSERGROUP}; do
+    local SUPERUSERGROUP=(wheel sudo root)
+    for sug in "${SUPERUSERGROUP[@]}"; do
         if groups | (command_exists rg && rg -q ${sug} || grep -q ${sug}); then
             SUGROUP=${sug}
-            echo -e "Super user group ${SUGROUP}"
+            # don't need -e as there are no escape codes to escape
+            echo "Super user group ${SUGROUP}"
             break
         fi
     done
@@ -100,7 +109,7 @@ installDepend() {
     fi
 
     echo -e "${YELLOW}Installing dependencies...${RC}"
-    if [[ $PACKAGER == "pacman" ]]; then
+    if [[ "$PACKAGER" == "pacman" ]]; then
         if ! command_exists yay && ! command_exists paru; then
             echo "Installing yay as AUR helper..."
             ${SUDO_CMD} ${PACKAGER} --noconfirm -S base-devel
@@ -118,20 +127,22 @@ installDepend() {
             exit 1
         fi
         ${AUR_HELPER} --noconfirm -S ${DEPENDENCIES}
-    elif [[ $PACKAGER == "nala" ]]; then
+    elif [[ "$PACKAGER" == "nala" ]]; then
         ${SUDO_CMD} ${PACKAGER} install -y ${DEPENDENCIES}
-    elif [[ $PACKAGER == "emerge" ]]; then
+    elif [[ "$PACKAGER" == "emerge" ]]; then
         ${SUDO_CMD} ${PACKAGER} -v app-shells/bash app-shells/bash-completion app-arch/tar app-editors/neovim sys-apps/bat app-text/tree app-text/multitail app-misc/fastfetch
-    elif [[ $PACKAGER == "xbps-install" ]]; then
+    elif [[ "$PACKAGER" == "xbps-install" ]]; then
         ${SUDO_CMD} ${PACKAGER} -v ${DEPENDENCIES}
-    elif [[ $PACKAGER == "nix-env" ]]; then
+    elif [[ "$PACKAGER" == "nix-env" ]]; then
         ${SUDO_CMD} ${PACKAGER} -iA nixos.bash nixos.bash-completion nixos.gnutar nixos.neovim nixos.bat nixos.tree nixos.multitail nixos.fastfetch
+    elif [[ "$PACKAGER" == "dnf" ]]; then
+        ${SUDO_CMD} ${PACKAGER} install -y ${DEPENDENCIES}
     else
         ${SUDO_CMD} ${PACKAGER} install -yq ${DEPENDENCIES}
     fi
 }
 
-installStarship() {
+installStarshipAndFzf() {
     if command_exists starship; then
         echo "Starship already installed"
         return
@@ -162,25 +173,33 @@ installZoxide() {
 }
 
 install_additional_dependencies() {
-   case $(command -v apt || command -v zypper || command -v dnf || command -v pacman) in
+    # we have PACKAGER so just use it
+    # for now just going to return early as we have already installed neovim in `installDepend`
+    # so I am not sure why we are trying to install it again
+    return
+   case "$PACKAGER" in
         *apt)
             curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim.appimage
             chmod u+x nvim.appimage
             ./nvim.appimage --appimage-extract
             ${SUDO_CMD} mv squashfs-root /opt/neovim
             ${SUDO_CMD} ln -s /opt/neovim/AppRun /usr/bin/nvim
+            echo "apt"
             ;;
         *zypper)
             ${SUDO_CMD} zypper refresh
-            ${SUDO_CMD} zypper install -y neovim 
+            ${SUDO_CMD} zypper install -y neovim
+            echo "zypper"
             ;;
         *dnf)
             ${SUDO_CMD} dnf check-update
-            ${SUDO_CMD} dnf install -y neovim 
+            ${SUDO_CMD} dnf install -y neovim
+            echo "dnf"
             ;;
         *pacman)
             ${SUDO_CMD} pacman -Syu
-            ${SUDO_CMD} pacman -S --noconfirm neovim 
+            ${SUDO_CMD} pacman -S --noconfirm neovim
+            echo "pacman"
             ;;
         *)
             echo "No supported package manager found. Please install neovim manually."
@@ -198,9 +217,9 @@ linkConfig() {
     USER_HOME=$(getent passwd ${SUDO_USER:-$USER} | cut -d: -f6)
     ## Check if a bashrc file is already there.
     OLD_BASHRC="${USER_HOME}/.bashrc"
-    if [[ -e ${OLD_BASHRC} ]]; then
+    if [[ -e "${OLD_BASHRC}" ]]; then
         echo -e "${YELLOW}Moving old bash config file to ${USER_HOME}/.bashrc.bak${RC}"
-        if ! mv ${OLD_BASHRC} ${USER_HOME}/.bashrc.bak; then
+        if ! mv "${OLD_BASHRC}" "${USER_HOME}/.bashrc.bak"; then
             echo -e "${RED}Can't move the old bash config file!${RC}"
             exit 1
         fi
@@ -208,15 +227,15 @@ linkConfig() {
 
     echo -e "${YELLOW}Linking new bash config file...${RC}"
     ## Make symbolic link.
-    ln -svf ${GITPATH}/.bashrc ${USER_HOME}/.bashrc
-    ln -svf ${GITPATH}/starship.toml ${USER_HOME}/.config/starship.toml
+    ln -svf "${GITPATH}/.bashrc" "${USER_HOME}/.bashrc"
+    ln -svf "${GITPATH}/starship.toml" "${USER_HOME}/.config/starship.toml"
     echo -e "${YELLOW}Linking custom fastfetch config file...${RC}"
-    ln -svf ${GITPATH}/config.jsonc ${USER_HOME}/.config/fastfetch/config.jsonc
+    ln -svf "${GITPATH}/config.jsonc" "${USER_HOME}/.config/fastfetch/config.jsonc"
 }
 
 checkEnv
 installDepend
-installStarship
+installStarshipAndFzf
 installZoxide
 install_additional_dependencies
 create_fastfetch_config
@@ -226,4 +245,3 @@ if linkConfig; then
 else
     echo -e "${RED}Something went wrong!${RC}"
 fi
-
