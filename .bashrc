@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 iatest=$(expr index "$-" i)
 
 #######################################################
@@ -41,6 +41,15 @@ shopt -s checkwinsize
 # Causes bash to append to history instead of overwriting it so if you start a new terminal, you have old session history
 shopt -s histappend
 PROMPT_COMMAND='history -a'
+
+# set up XDG folders
+export XDG_DATA_HOME="$HOME/.local/share"
+export XDG_CONFIG_HOME="$HOME/.config"
+export XDG_STATE_HOME="$HOME/.local/state"
+export XDG_CACHE_HOME="$HOME/.cache"
+
+# Seeing as other scripts will use it might as well export it
+export LINUXTOOLBOXDIR="$HOME/linuxtoolbox"
 
 # Allow ctrl-S for history navigation (with ctrl-R)
 [[ $- == *i* ]] && stty -ixon
@@ -475,10 +484,10 @@ install_bashrc_support() {
 			sudo apt-get install multitail tree zoxide trash-cli fzf bash-completion
 			# Fetch the latest fastfetch release URL for linux-amd64 deb file
 			FASTFETCH_URL=$(curl -s https://api.github.com/repos/fastfetch-cli/fastfetch/releases/latest | grep "browser_download_url.*linux-amd64.deb" | cut -d '"' -f 4)
-			
+
 			# Download the latest fastfetch deb file
 			curl -sL $FASTFETCH_URL -o /tmp/fastfetch_latest_amd64.deb
-			
+
 			# Install the downloaded deb file using apt-get
 			sudo apt-get install /tmp/fastfetch_latest_amd64.deb
 			;;
@@ -628,5 +637,19 @@ fi
 export PATH=$PATH:"$HOME/.local/bin:$HOME/.cargo/bin:/var/lib/flatpak/exports/bin:/.local/share/flatpak/exports/bin"
 
 # Install Starship - curl -sS https://starship.rs/install.sh | sh
-eval "$(starship init bash)"
-eval "$(zoxide init bash)"
+# cache starship and zoxide for faster startup also creates the cache the first time
+# refreshes the cache every 14 days so if you update during that time and the script
+# for starship or zoxide initialization changes you will get the new script
+local STARSHIP_CACHE="$LINUXTOOLBOXDIR/mybash/_starship.sh"
+if [[ ! $(find "$STARSHIP_CACHE" -newermt "14 days ago" -print) ]]; then
+	starship init bash --print-full-init > "$STARSHIP_CACHE"
+fi
+source "$STARSHIP_CACHE"
+
+local ZOXIDE_CACHE="$LINUXTOOLBOXDIR/mybash/_zoxide.sh"
+if [[ ! $(find "$ZOXIDE_CACHE" -newermt "14 days ago" -print) ]]; then
+    zoxide init bash > "$ZOXIDE_CACHE"
+fi
+source "$ZOXIDE_CACHE"
+
+unset STARSHIP_CACHE ZOXIDE_CACHE
