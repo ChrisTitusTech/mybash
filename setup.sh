@@ -14,16 +14,17 @@ if [ ! -d "$LINUXTOOLBOXDIR" ]; then
     echo "${GREEN}linuxtoolbox directory created: $LINUXTOOLBOXDIR${RC}"
 fi
 
-if [ ! -d "$LINUXTOOLBOXDIR/mybash" ]; then
-    echo "${YELLOW}Cloning mybash repository into: $LINUXTOOLBOXDIR/mybash${RC}"
-    git clone https://github.com/ChrisTitusTech/mybash "$LINUXTOOLBOXDIR/mybash"
-    if [ $? -eq 0 ]; then
-        echo "${GREEN}Successfully cloned mybash repository${RC}"
-    else
-        echo "${RED}Failed to clone mybash repository${RC}"
-        exit 1
-    fi
+if [ -d "$LINUXTOOLBOXDIR/mybash" ]; then rm -rf "$LINUXTOOLBOXDIR/mybash"; fi
+
+echo "${YELLOW}Cloning mybash repository into: $LINUXTOOLBOXDIR/mybash${RC}"
+git clone https://github.com/ChrisTitusTech/mybash "$LINUXTOOLBOXDIR/mybash"
+if [ $? -eq 0 ]; then
+    echo "${GREEN}Successfully cloned mybash repository${RC}"
+else
+    echo "${RED}Failed to clone mybash repository${RC}"
+    exit 1
 fi
+
 
 cd "$LINUXTOOLBOXDIR/mybash" || exit
 
