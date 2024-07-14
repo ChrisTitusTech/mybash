@@ -137,7 +137,7 @@ installDepend() {
         ${SUDO_CMD} ${PACKAGER} install -yq ${DEPENDENCIES}
     fi
 
-    # Check to see if a the FiraCode Nerd Font is installed (Change this to whatever font you would like)
+    # Check to see if the FiraCode Nerd Font is installed (Change this to whatever font you would like)
     FONT_NAME="FiraCode Nerd Font"
     if fc-list :family | grep -iq "$FONT_NAME"; then
         echo "Font '$FONT_NAME' is installed."

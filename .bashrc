@@ -72,13 +72,15 @@ alias vim='nvim'
 
 # Replace batcat with cat on Fedora as batcat is not available as a RPM in any form
 if command -v lsb_release >/dev/null; then
-	DISTRIBUTION=$(lsb_release -si)
+    DISTRIBUTION=$(lsb_release -si)
+else
+    DISTRIBUTION=$(cat /etc/os-release | grep ^ID= | cut -d'=' -f2)
+fi
 
-	if [ "$DISTRIBUTION" = "Fedora" ] || [ "$DISTRIBUTION" = "Arch" ]; then
-		alias cat='bat'
-	else
-		alias cat='batcat'
-	fi
+if [ "$DISTRIBUTION" = "Fedora" ] || [ "$DISTRIBUTION" = "Arch" ]; then
+	alias cat='bat'
+else
+	alias cat='batcat'
 fi
 
 # To have colors for ls and all grep commands such as grep, egrep and zgrep
@@ -297,22 +299,22 @@ ftext() {
 
 # Copy file with a progress bar
 cpp() {
-	set -e
-	strace -q -ewrite cp -- "${1}" "${2}" 2>&1 |
-		awk '{
-	count += $NF
-	if (count % 10 == 0) {
-		percent = count / total_size * 100
-		printf "%3d%% [", percent
-		for (i=0;i<=percent;i++)
-			printf "="
-			printf ">"
-			for (i=percent;i<100;i++)
-				printf " "
-				printf "]\r"
-			}
-		}
-	END { print "" }' total_size="$(stat -c '%s' "${1}")" count=0
+    set -e
+    strace -q -ewrite cp -- "${1}" "${2}" 2>&1 |
+    awk '{
+        count += $NF
+        if (count % 10 == 0) {
+            percent = count / total_size * 100
+            printf "%3d%% [", percent
+            for (i=0;i<=percent;i++)
+                printf "="
+            printf ">"
+            for (i=percent;i<100;i++)
+                printf " "
+            printf "]\r"
+        }
+    }
+    END { print "" }' total_size="$(stat -c '%s' "${1}")" count=0
 }
 
 # Copy and go to the directory
@@ -369,103 +371,102 @@ pwdtail() {
 }
 
 # Show the current distribution
-distribution ()
-{
-	local dtype="unknown"  # Default to unknown
+distribution () {
+    local dtype="unknown"  # Default to unknown
 
-	# Use /etc/os-release for modern distro identification
-	if [ -r /etc/os-release ]; then
-		source /etc/os-release
-		case $ID in
-			fedora|rhel|centos)
-				dtype="redhat"
-				;;
-			sles|opensuse*)
-				dtype="suse"
-				;;
-			ubuntu|debian)
-				dtype="debian"
-				;;
-			gentoo)
-				dtype="gentoo"
-				;;
-			arch|manjaro)
-				dtype="arch"
-				;;
-			slackware)
-				dtype="slackware"
-				;;
-			*)
-				# Check ID_LIKE only if dtype is still unknown
-				if [ -n "$ID_LIKE" ]; then
-					case $ID_LIKE in
-						*fedora*|*rhel*|*centos*)
-							dtype="redhat"
-							;;
-						*sles*|*opensuse*)
-							dtype="suse"
-							;;
-						*ubuntu*|*debian*)
-							dtype="debian"
-							;;
-						*gentoo*)
-							dtype="gentoo"
-							;;
-						*arch*)
-							dtype="arch"
-							;;
-						*slackware*)
-							dtype="slackware"
-							;;
-					esac
-				fi
+    # Use /etc/os-release for modern distro identification
+    if [ -r /etc/os-release ]; then
+        source /etc/os-release
+        case $ID in
+            fedora|rhel|centos)
+                dtype="redhat"
+                ;;
+            sles|opensuse*)
+                dtype="suse"
+                ;;
+            ubuntu|debian)
+                dtype="debian"
+                ;;
+            gentoo)
+                dtype="gentoo"
+                ;;
+            arch|manjaro)
+                dtype="arch"
+                ;;
+            slackware)
+                dtype="slackware"
+                ;;
+            *)
+                # Check ID_LIKE only if dtype is still unknown
+                if [ -n "$ID_LIKE" ]; then
+                    case $ID_LIKE in
+                        *fedora*|*rhel*|*centos*)
+                            dtype="redhat"
+                            ;;
+                        *sles*|*opensuse*)
+                            dtype="suse"
+                            ;;
+                        *ubuntu*|*debian*)
+                            dtype="debian"
+                            ;;
+                        *gentoo*)
+                            dtype="gentoo"
+                            ;;
+                        *arch*)
+                            dtype="arch"
+                            ;;
+                        *slackware*)
+                            dtype="slackware"
+                            ;;
+                    esac
+                fi
 
-				# If ID or ID_LIKE is not recognized, keep dtype as unknown
-				;;
-		esac
-	fi
+                # If ID or ID_LIKE is not recognized, keep dtype as unknown
+                ;;
+        esac
+    fi
 
-	echo $dtype
+    echo $dtype
 }
 
 # Show the current version of the operating system
 ver() {
-	local dtype
-	dtype=$(distribution)
+    local dtype
+    dtype=$(distribution)
 
-	case $dtype in
-		"redhat")
-			if [ -s /etc/redhat-release ]; then
-				cat /etc/redhat-release
-			else
-				cat /etc/issue
-			fi
-			uname -a
-			;;
-		"suse")
-			cat /etc/SuSE-release
-			;;
-		"debian")
-			lsb_release -a
-			;;
-		"gentoo")
-			cat /etc/gentoo-release
-			;;
-		"arch")
-			cat /etc/os-release
-			;;
-		"slackware")
-			cat /etc/slackware-version
-			;;
-		*)
-			if [ -s /etc/issue ]; then
-				cat /etc/issue
-			else
-				echo "Error: Unknown distribution"
-				exit 1
-			fi
-			;;
-	esac
+    case $dtype in
+        "redhat")
+            if [ -s /etc/redhat-release ]; then
+                cat /etc/redhat-release
+            else
+                cat /etc/issue
+            fi
+            uname -a
+            ;;
+        "suse")
+            cat /etc/SuSE-release
+            ;;
+        "debian")
+            lsb_release -a
+            ;;
+        "gentoo")
+            cat /etc/gentoo-release
+            ;;
+        "arch")
+            cat /etc/os-release
+            ;;
+        "slackware")
+            cat /etc/slackware-version
+            ;;
+        *)
+            if [ -s /etc/issue ]; then
+                cat /etc/issue
+            else
+                echo "Error: Unknown distribution"
+                exit 1
+            fi
+            ;;
+    esac
 }
 
 # Automatically install the needed support files for this .bashrc file
@@ -505,20 +506,19 @@ install_bashrc_support() {
 
 # IP address lookup
 alias whatismyip="whatsmyip"
-function whatsmyip ()
-{
-	# Internal IP Lookup.
-	if [ -e /sbin/ip ]; then
-		echo -n "Internal IP: "
-		/sbin/ip addr show wlan0 | grep "inet " | awk -F: '{print $1}' | awk '{print $2}'
-	else
-		echo -n "Internal IP: "
-		/sbin/ifconfig wlan0 | grep "inet " | awk -F: '{print $1} |' | awk '{print $2}'
-	fi
+function whatsmyip () {
+    # Internal IP Lookup.
+    if command -v ip &> /dev/null; then
+        echo -n "Internal IP: "
+        ip addr show wlan0 | grep "inet " | awk '{print $2}' | cut -d/ -f1
+    else
+        echo -n "Internal IP: "
+        ifconfig wlan0 | grep "inet " | awk '{print $2}'
+    fi
 
-	# External IP Lookup
-	echo -n "External IP: "
-	curl -s ifconfig.me
+    # External IP Lookup
+    echo -n "External IP: "
+    curl -s ifconfig.me
 }
 
 # View Apache logs
@@ -613,7 +613,7 @@ function hb {
     fi
 
     uri="http://bin.christitus.com/documents"
-    response=$(curl -s -X POST -d "$(cat "$1")" "$uri")
+    response=$(curl -s -X POST -d @"$1" "$uri")
     if [ $? -eq 0 ]; then
         hasteKey=$(echo $response | jq -r '.key')
         echo "http://bin.christitus.com/$hasteKey"
@@ -636,20 +636,5 @@ fi
 
 export PATH=$PATH:"$HOME/.local/bin:$HOME/.cargo/bin:/var/lib/flatpak/exports/bin:/.local/share/flatpak/exports/bin"
 
-# Install Starship - curl -sS https://starship.rs/install.sh | sh
-# cache starship and zoxide for faster startup also creates the cache the first time
-# refreshes the cache every 14 days so if you update during that time and the script
-# for starship or zoxide initialization changes you will get the new script
-local STARSHIP_CACHE="$LINUXTOOLBOXDIR/mybash/_starship.sh"
-if [[ ! $(find "$STARSHIP_CACHE" -newermt "14 days ago" -print) ]]; then
-	starship init bash --print-full-init > "$STARSHIP_CACHE"
-fi
-source "$STARSHIP_CACHE"
-
-local ZOXIDE_CACHE="$LINUXTOOLBOXDIR/mybash/_zoxide.sh"
-if [[ ! $(find "$ZOXIDE_CACHE" -newermt "14 days ago" -print) ]]; then
-    zoxide init bash > "$ZOXIDE_CACHE"
-fi
-source "$ZOXIDE_CACHE"
-
-unset STARSHIP_CACHE ZOXIDE_CACHE
+eval "$(starship init bash)"
+eval "$(zoxide init bash)"
