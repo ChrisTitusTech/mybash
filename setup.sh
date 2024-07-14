@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 
 RC='\033[0m'
 RED='\033[31m'
@@ -35,7 +35,7 @@ checkEnv() {
     ## Check for requirements.
     REQUIREMENTS='curl groups sudo'
     for req in $REQUIREMENTS; do
-        if ! command_exists $req; then
+        if ! command_exists "$req"; then
             echo "${RED}To run me, you need: $REQUIREMENTS${RC}"
             exit 1
         fi
@@ -44,8 +44,8 @@ checkEnv() {
     ## Check Package Handler
     PACKAGEMANAGER='apt yum dnf pacman zypper'
     for pgm in $PACKAGEMANAGER; do
-        if command_exists $pgm; then
-            PACKAGER=$pgm
+        if command_exists "$pgm"; then
+            PACKAGER="$pgm"
             echo "Using $pgm"
             break
         fi
@@ -67,8 +67,8 @@ checkEnv() {
     echo "Using ${SUDO_CMD} as privilege escalation software"
     
     ## Check if the current directory is writable.
-    GITPATH=`dirname \`realpath $0\``
-    if [ ! -w $GITPATH ]; then
+    GITPATH=$(dirname "$(realpath "$0")")
+    if [ ! -w "$GITPATH" ]; then
         echo "${RED}Can't write to $GITPATH${RC}"
         exit 1
     fi
@@ -76,15 +76,15 @@ checkEnv() {
     ## Check SuperUser Group
     SUPERUSERGROUP='wheel sudo root'
     for sug in $SUPERUSERGROUP; do
-        if groups | grep $sug >/dev/null; then
-            SUGROUP=$sug
+        if groups | grep -q "$sug"; then
+            SUGROUP="$sug"
             echo "Super user group $SUGROUP"
             break
         fi
     done
 
     ## Check if member of the sudo group.
-    if ! groups | grep $SUGROUP >/dev/null; then
+    if ! groups | grep -q "$SUGROUP"; then
         echo "${RED}You need to be a member of the sudo group to run me!${RC}"
         exit 1
     fi
@@ -102,7 +102,7 @@ installDepend() {
         if ! command_exists yay && ! command_exists paru; then
             echo "Installing yay as AUR helper..."
             ${SUDO_CMD} ${PACKAGER} --noconfirm -S base-devel
-            cd /opt && ${SUDO_CMD} git clone https://aur.archlinux.org/yay-git.git && ${SUDO_CMD} chown -R ${USER}:${USER} ./yay-git
+            cd /opt && ${SUDO_CMD} git clone https://aur.archlinux.org/yay-git.git && ${SUDO_CMD} chown -R "${USER}:${USER}" ./yay-git
             cd yay-git && makepkg --noconfirm -si
         else
             echo "AUR helper already installed"
@@ -160,13 +160,15 @@ installZoxide() {
 }
 
 install_additional_dependencies() {
-    case `command -v apt || command -v zypper || command -v dnf || command -v pacman` in
+    case $(command -v apt || command -v zypper || command -v dnf || command -v pacman) in
         *apt)
-            curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim.appimage
-            chmod u+x nvim.appimage
-            ./nvim.appimage --appimage-extract
-            ${SUDO_CMD} mv squashfs-root /opt/neovim
-            ${SUDO_CMD} ln -s /opt/neovim/AppRun /usr/bin/nvim
+            if [ ! -d "/opt/neovim" ]; then
+                curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim.appimage
+                chmod u+x nvim.appimage
+                ./nvim.appimage --appimage-extract
+                ${SUDO_CMD} mv squashfs-root /opt/neovim
+                ${SUDO_CMD} ln -s /opt/neovim/AppRun /usr/bin/nvim
+            fi
             ;;
         *zypper)
             ${SUDO_CMD} zypper refresh
@@ -188,30 +190,36 @@ install_additional_dependencies() {
 }
 
 create_fastfetch_config() {
-    fastfetch --gen-config
+    ## Get the correct user home directory.
+    USER_HOME=$(getent passwd "${SUDO_USER:-$USER}" | cut -d: -f6)
+    
+    if [ ! -d "$USER_HOME/.config/fastfetch" ]; then
+        mkdir -p "$USER_HOME/.config/fastfetch"
+    fi
+    # Check if the fastfetch config file exists
+    if [ -e "$USER_HOME/.config/fastfetch/config.jsonc" ]; then
+        rm -f "$USER_HOME/.config/fastfetch/config.jsonc"
+    fi
+    ln -svf "$GITPATH/config.jsonc" "$USER_HOME/.config/fastfetch/config.jsonc"
 }
 
 linkConfig() {
     ## Get the correct user home directory.
-    USER_HOME=`getent passwd ${SUDO_USER:-$USER} | cut -d: -f6`
+    USER_HOME=$(getent passwd "${SUDO_USER:-$USER}" | cut -d: -f6)
     ## Check if a bashrc file is already there.
     OLD_BASHRC="$USER_HOME/.bashrc"
-    if [ -e $OLD_BASHRC ]; then
+    if [ -e "$OLD_BASHRC" ]; then
         echo "${YELLOW}Moving old bash config file to $USER_HOME/.bashrc.bak${RC}"
-        if ! mv $OLD_BASHRC $USER_HOME/.bashrc.bak; then
+        if ! mv "$OLD_BASHRC" "$USER_HOME/.bashrc.bak"; then
             echo "${RED}Can't move the old bash config file!${RC}"
             exit 1
         fi
     fi
 
-    if [ ! -d $USER_HOME/.config/fastfetch ]; then
-        mkdir -p $USER_HOME/.config/fastfetch
-    fi
+    
     echo "${YELLOW}Linking new bash config file...${RC}"
-    ## Make symbolic link.
-    ln -svf $GITPATH/config.jsonc $USER_HOME/.config/fastfetch/config.jsonc
-    ln -svf $GITPATH/.bashrc $USER_HOME/.bashrc
-    ln -svf $GITPATH/starship.toml $USER_HOME/.config/starship.toml
+    ln -svf "$GITPATH/.bashrc" "$USER_HOME/.bashrc"
+    ln -svf "$GITPATH/starship.toml" "$USER_HOME/.config/starship.toml"
 }
 
 checkEnv
