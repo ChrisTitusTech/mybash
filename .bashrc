@@ -30,6 +30,7 @@ if [[ $iatest -gt 0 ]]; then bind "set bell-style visible"; fi
 # Expand the history size
 export HISTFILESIZE=10000
 export HISTSIZE=500
+export HISTTIMEFORMAT="%F %T" # add timestamp to history
 
 # Don't put duplicate lines in the history and do not add lines that start with a space
 export HISTCONTROL=erasedups:ignoredups:ignorespace
@@ -75,7 +76,15 @@ fi
 export CLICOLOR=1
 export LS_COLORS='no=00:fi=00:di=00;34:ln=01;36:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.jpg=01;35:*.jpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.avi=01;35:*.fli=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.ogg=01;35:*.mp3=01;35:*.wav=01;35:*.xml=00;31:'
 #export GREP_OPTIONS='--color=auto' #deprecated
-alias grep="/usr/bin/grep $GREP_OPTIONS"
+
+# Check if ripgrep is installed
+if command -v rg &> /dev/null; then
+    # Alias grep to rg if ripgrep is installed
+    alias grep='rg'
+else
+    # Alias grep to /usr/bin/grep with GREP_OPTIONS if ripgrep is not installed
+    alias grep="/usr/bin/grep $GREP_OPTIONS"
+fi
 unset GREP_OPTIONS
 
 # Color for manpages in less makes manpages a little easier to read
@@ -137,6 +146,7 @@ alias vi='nvim'
 alias svi='sudo vi'
 alias vis='nvim "+set si"'
 
+
 # Change directory aliases
 alias home='cd ~'
 alias cd..='cd ..'
@@ -156,16 +166,19 @@ alias la='ls -Alh'                # show hidden files
 alias ls='ls -aFh --color=always' # add colors and file type extensions
 alias lx='ls -lXBh'               # sort by extension
 alias lk='ls -lSrh'               # sort by size
-alias lc='ls -lcrh'               # sort by change time
-alias lu='ls -lurh'               # sort by access time
+alias lc='ls -ltcrh'              # sort by change time
+alias lu='ls -lturh'              # sort by access time
 alias lr='ls -lRh'                # recursive ls
 alias lt='ls -ltrh'               # sort by date
 alias lm='ls -alh |more'          # pipe through 'more'
 alias lw='ls -xAh'                # wide listing format
 alias ll='ls -Fls'                # long listing format
-alias labc='ls -lap'              #alphabetical sort
+alias labc='ls -lap'              # alphabetical sort
 alias lf="ls -l | egrep -v '^d'"  # files only
 alias ldir="ls -l | egrep '^d'"   # directories only
+alias lla='ls -Al'                # List and Hidden Files
+alias las='ls -A'                 # Hidden Files
+alias lls='ls -l'                 # List
 
 # alias chmod commands
 alias mx='chmod a+x'
@@ -225,6 +238,14 @@ alias clickpaste='sleep 3; xdotool type "$(xclip -o -selection clipboard)"'
 # KITTY - alias to be able to use kitty features when connecting to remote servers(e.g use tmux on remote server)
 
 alias kssh="kitty +kitten ssh"
+
+# alias to cleanup unused docker containers, images, networks, and volumes
+
+alias docker-clean=' \
+  docker container prune -f ; \
+  docker image prune -f ; \
+  docker network prune -f ; \
+  docker volume prune -f '
 
 #######################################################
 # SPECIAL FUNCTIONS
@@ -359,14 +380,38 @@ distribution ()
 			gentoo)
 				dtype="gentoo"
 				;;
-			arch)
+			arch|manjaro)
 				dtype="arch"
 				;;
 			slackware)
 				dtype="slackware"
 				;;
 			*)
-				# If ID is not recognized, keep dtype as unknown
+				# Check ID_LIKE only if dtype is still unknown
+				if [ -n "$ID_LIKE" ]; then
+					case $ID_LIKE in
+						*fedora*|*rhel*|*centos*)
+							dtype="redhat"
+							;;
+						*sles*|*opensuse*)
+							dtype="suse"
+							;;
+						*ubuntu*|*debian*)
+							dtype="debian"
+							;;
+						*gentoo*)
+							dtype="gentoo"
+							;;
+						*arch*)
+							dtype="arch"
+							;;
+						*slackware*)
+							dtype="slackware"
+							;;
+					esac
+				fi
+
+				# If ID or ID_LIKE is not recognized, keep dtype as unknown
 				;;
 		esac
 	fi
@@ -573,7 +618,12 @@ function hb {
 #######################################################
 
 alias hug="hugo server -F --bind=10.0.0.97 --baseURL=http://10.0.0.97"
-bind '"\C-f":"zi\n"'
+
+# Check if the shell is interactive
+if [[ $- == *i* ]]; then
+    # Bind Ctrl+f to insert 'zi' followed by a newline
+    bind '"\C-f":"zi\n"'
+fi
 
 export PATH=$PATH:"$HOME/.local/bin:$HOME/.cargo/bin:/var/lib/flatpak/exports/bin:/.local/share/flatpak/exports/bin"
 

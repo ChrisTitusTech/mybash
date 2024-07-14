@@ -1,0 +1,38 @@
+name: Bash Lint
+
+on: [push, pull_request]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, ubuntu-20.04]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Cache ShellCheck
+      id: cache-shellcheck
+      uses: actions/cache@v4
+      with:
+        path: /usr/local/bin/shellcheck
+        key: ${{ runner.os }}-shellcheck
+        restore-keys: |
+          ${{ runner.os }}-shellcheck
+
+    - name: Install ShellCheck
+      if: steps.cache-shellcheck.outputs.cache-hit != 'true'
+      run: sudo apt-get install -y shellcheck
+
+    - name: Lint Bash scripts
+      run: |
+        echo "Running ShellCheck..."
+        find . -name "*.sh" -print0 | xargs -0 shellcheck -f gcc | tee shellcheck.log
+        if grep -q "error:" shellcheck.log; then
+          echo "Linting errors found!"
+          exit 1
+        else
+          echo "No linting errors found."
+        fi
