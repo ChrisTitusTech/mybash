@@ -25,7 +25,6 @@ if [ ! -d "$LINUXTOOLBOXDIR/mybash" ]; then
     fi
 fi
 
-
 cd "$LINUXTOOLBOXDIR/mybash" || exit
 
 command_exists() {
@@ -117,13 +116,13 @@ installDepend() {
             exit 1
         fi
         ${AUR_HELPER} --noconfirm -S ${DEPENDENCIES}
-    elif [[ $PACKAGER == "nala" ]]; then
+    elif [ "$PACKAGER" = "nala" ]; then
         ${SUDO_CMD} ${PACKAGER} install -y ${DEPENDENCIES}
-    elif [[ $PACKAGER == "emerge" ]]; then
+    elif [ "$PACKAGER" = "emerge" ]; then
         ${SUDO_CMD} ${PACKAGER} -v app-shells/bash app-shells/bash-completion app-arch/tar app-editors/neovim sys-apps/bat app-text/tree app-text/multitail app-misc/fastfetch
-    elif [[ $PACKAGER == "xbps-install" ]]; then
+    elif [ "$PACKAGER" = "xbps-install" ]; then
         ${SUDO_CMD} ${PACKAGER} -v ${DEPENDENCIES}
-    elif [[ $PACKAGER == "nix-env" ]]; then
+    elif [ "$PACKAGER" = "nix-env" ]; then
         ${SUDO_CMD} ${PACKAGER} -iA nixos.bash nixos.bash-completion nixos.gnutar nixos.neovim nixos.bat nixos.tree nixos.multitail nixos.fastfetch
     else
         ${SUDO_CMD} ${PACKAGER} install -yq ${DEPENDENCIES}
@@ -227,4 +226,3 @@ if linkConfig; then
 else
     echo "${RED}Something went wrong!${RC}"
 fi
-
