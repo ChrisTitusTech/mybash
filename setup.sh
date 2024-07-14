@@ -99,28 +99,9 @@ checkEnv() {
 
 installDepend() {
     ## Check for dependencies.
-    DEPENDENCIES='bash bash-completion tar bat tree multitail fastfetch'
+    DEPENDENCIES='bash bash-completion tar bat tree multitail fastfetch wget unzip'
     if ! command_exists nvim; then
         DEPENDENCIES="${DEPENDENCIES} neovim"
-    fi
-    # Check to see if a the FiraCode Nerd Font is installed (Change this to whatever font you would like)
-    FONT_NAME="FiraCode Nerd Font"
-    if fc-list :family | grep -iq "$FONT_NAME"; then
-        echo "Font '$FONT_NAME' is installed."
-    else
-        echo "Installing font '$FONT_NAME'"
-        # Change this URL to correspond with the correct font
-        FONT_URL="https://github.com/ryanoasis/nerd-fonts/releases/download/v2.3.3/FiraCode.zip"
-        FONT_DIR="$HOME/.local/share/fonts"
-        wget $FONT_URL -O ${FONT_NAME}.zip
-        unzip ${FONT_NAME}.zip -d $FONT_NAME
-        mkdir -p $FONT_DIR
-        mv ${FONT_NAME}/*.ttf $FONT_DIR/
-        # Update the font cache
-        fc-cache -fv
-        # delete the files created from this
-        rm -rf ${FONT_NAME} ${FONT_NAME}.zip
-        echo "'$FONT_NAME' installed successfully."
     fi
 
     echo "${YELLOW}Installing dependencies...${RC}"
@@ -154,6 +135,26 @@ installDepend() {
         ${SUDO_CMD} ${PACKAGER} install -y ${DEPENDENCIES}
     else
         ${SUDO_CMD} ${PACKAGER} install -yq ${DEPENDENCIES}
+    fi
+
+    # Check to see if a the FiraCode Nerd Font is installed (Change this to whatever font you would like)
+    FONT_NAME="FiraCode Nerd Font"
+    if fc-list :family | grep -iq "$FONT_NAME"; then
+        echo "Font '$FONT_NAME' is installed."
+    else
+        echo "Installing font '$FONT_NAME'"
+        # Change this URL to correspond with the correct font
+        FONT_URL="https://github.com/ryanoasis/nerd-fonts/releases/download/v2.3.3/FiraCode.zip"
+        FONT_DIR="$HOME/.local/share/fonts"
+        wget $FONT_URL -O ${FONT_NAME}.zip
+        unzip ${FONT_NAME}.zip -d $FONT_NAME
+        mkdir -p $FONT_DIR
+        mv ${FONT_NAME}/*.ttf $FONT_DIR/
+        # Update the font cache
+        fc-cache -fv
+        # delete the files created from this
+        rm -rf ${FONT_NAME} ${FONT_NAME}.zip
+        echo "'$FONT_NAME' installed successfully."
     fi
 }
 
@@ -232,7 +233,10 @@ create_fastfetch_config() {
     if [ -e "$USER_HOME/.config/fastfetch/config.jsonc" ]; then
         rm -f "$USER_HOME/.config/fastfetch/config.jsonc"
     fi
-    ln -svf "$GITPATH/config.jsonc" "$USER_HOME/.config/fastfetch/config.jsonc"
+    ln -svf "$GITPATH/config.jsonc" "$USER_HOME/.config/fastfetch/config.jsonc" || {
+        echo "${RED}Failed to create symbolic link for fastfetch config${RC}"
+        exit 1
+    }
 }
 
 linkConfig() {
@@ -249,8 +253,14 @@ linkConfig() {
     fi
 
     echo "${YELLOW}Linking new bash config file...${RC}"
-    ln -svf "$GITPATH/.bashrc" "$USER_HOME/.bashrc"
-    ln -svf "$GITPATH/starship.toml" "$USER_HOME/.config/starship.toml"
+    ln -svf "$GITPATH/.bashrc" "$USER_HOME/.bashrc" || {
+        echo "${RED}Failed to create symbolic link for .bashrc${RC}"
+        exit 1
+    }
+    ln -svf "$GITPATH/starship.toml" "$USER_HOME/.config/starship.toml" || {
+        echo "${RED}Failed to create symbolic link for starship.toml${RC}"
+        exit 1
+    }
 }
 
 checkEnv
