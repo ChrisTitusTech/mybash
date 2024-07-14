@@ -97,6 +97,25 @@ installDepend() {
     if ! command_exists nvim; then
         DEPENDENCIES="${DEPENDENCIES} neovim"
     fi
+    # Check to see if a the FiraCode Nerd Font is installed (Change this to whatever font you would like)
+    FONT_NAME="FiraCode Nerd Font"
+    if fc-list :family | grep -iq "$FONT_NAME"; then
+        echo "Font '$FONT_NAME' is installed."
+    else
+        echo "Installing font '$FONT_NAME'"
+        # Change this URL to correspond with the correct font
+        FONT_URL="https://github.com/ryanoasis/nerd-fonts/releases/download/v2.3.3/FiraCode.zip"
+        FONT_DIR="$HOME/.local/share/fonts"
+        wget $FONT_URL -O ${FONT_NAME}.zip
+        unzip ${FONT_NAME}.zip -d $FONT_NAME
+        mkdir -p $FONT_DIR
+        mv ${FONT_NAME}/*.ttf $FONT_DIR/
+        # Update the font cache
+        fc-cache -fv
+        # delete the files created from this
+        rm -rf ${FONT_NAME} ${FONT_NAME}.zip
+        echo "'$FONT_NAME' installed successfully."
+    fi
 
     echo "${YELLOW}Installing dependencies...${RC}"
     if [ "$PACKAGER" = "pacman" ]; then
