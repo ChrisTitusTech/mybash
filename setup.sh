@@ -25,6 +25,11 @@ else
     exit 1
 fi
 
+# add variables to top level so can easily be accessed by all functions
+PACKAGER=""
+SUDO_CMD=""
+SUGROUP=""
+GITPATH=""
 
 cd "$LINUXTOOLBOXDIR/mybash" || exit
 
@@ -43,7 +48,7 @@ checkEnv() {
     done
 
     ## Check Package Handler
-    PACKAGEMANAGER='apt yum dnf pacman zypper'
+    PACKAGEMANAGER='nala apt dnf yum pacman zypper emerge xbps-install nix-env'
     for pgm in $PACKAGEMANAGER; do
         if command_exists "$pgm"; then
             PACKAGER="$pgm"
@@ -65,8 +70,8 @@ checkEnv() {
         SUDO_CMD="su -c"
     fi
 
-    echo "Using ${SUDO_CMD} as privilege escalation software"
-    
+    echo "Using $SUDO_CMD as privilege escalation software"
+
     ## Check if the current directory is writable.
     GITPATH=$(dirname "$(realpath "$0")")
     if [ ! -w "$GITPATH" ]; then
@@ -75,6 +80,7 @@ checkEnv() {
     fi
 
     ## Check SuperUser Group
+
     SUPERUSERGROUP='wheel sudo root'
     for sug in $SUPERUSERGROUP; do
         if groups | grep -q "$sug"; then
@@ -144,12 +150,14 @@ installDepend() {
         ${SUDO_CMD} ${PACKAGER} -v ${DEPENDENCIES}
     elif [ "$PACKAGER" = "nix-env" ]; then
         ${SUDO_CMD} ${PACKAGER} -iA nixos.bash nixos.bash-completion nixos.gnutar nixos.neovim nixos.bat nixos.tree nixos.multitail nixos.fastfetch
+    elif [[ "$PACKAGER" == "dnf" ]]; then
+        ${SUDO_CMD} ${PACKAGER} install -y ${DEPENDENCIES}
     else
         ${SUDO_CMD} ${PACKAGER} install -yq ${DEPENDENCIES}
     fi
 }
 
-installStarship() {
+installStarshipAndFzf() {
     if command_exists starship; then
         echo "Starship already installed"
         return
@@ -180,7 +188,11 @@ installZoxide() {
 }
 
 install_additional_dependencies() {
-    case $(command -v apt || command -v zypper || command -v dnf || command -v pacman) in
+    # we have PACKAGER so just use it
+    # for now just going to return early as we have already installed neovim in `installDepend`
+    # so I am not sure why we are trying to install it again
+    return
+   case "$PACKAGER" in
         *apt)
             if [ ! -d "/opt/neovim" ]; then
                 curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim.appimage
@@ -196,11 +208,11 @@ install_additional_dependencies() {
             ;;
         *dnf)
             ${SUDO_CMD} dnf check-update
-            ${SUDO_CMD} dnf install -y neovim 
+            ${SUDO_CMD} dnf install -y neovim
             ;;
         *pacman)
             ${SUDO_CMD} pacman -Syu
-            ${SUDO_CMD} pacman -S --noconfirm neovim 
+            ${SUDO_CMD} pacman -S --noconfirm neovim
             ;;
         *)
             echo "No supported package manager found. Please install neovim manually."
@@ -236,7 +248,6 @@ linkConfig() {
         fi
     fi
 
-    
     echo "${YELLOW}Linking new bash config file...${RC}"
     ln -svf "$GITPATH/.bashrc" "$USER_HOME/.bashrc"
     ln -svf "$GITPATH/starship.toml" "$USER_HOME/.config/starship.toml"
@@ -244,7 +255,7 @@ linkConfig() {
 
 checkEnv
 installDepend
-installStarship
+installStarshipAndFzf
 installZoxide
 install_additional_dependencies
 create_fastfetch_config
