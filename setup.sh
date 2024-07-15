@@ -130,7 +130,7 @@ installDepend() {
     elif [ "$PACKAGER" = "xbps-install" ]; then
         ${SUDO_CMD} ${PACKAGER} -v ${DEPENDENCIES}
     elif [ "$PACKAGER" = "nix-env" ]; then
-        ${SUDO_CMD} ${PACKAGER} -iA nixos.bash nixos.bash-completion nixos.gnutar nixos.neovim nixos.bat nixos.tree nixos.multitail nixos.fastfetch
+        ${SUDO_CMD} ${PACKAGER} -iA nixos.bash nixos.bash-completion nixos.gnutar nixos.neovim nixos.bat nixos.tree nixos.multitail nixos.fastfetch  nixos.pkgs.starship
     elif [[ "$PACKAGER" == "dnf" ]]; then
         ${SUDO_CMD} ${PACKAGER} install -y ${DEPENDENCIES}
     else
