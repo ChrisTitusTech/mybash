@@ -71,17 +71,17 @@ alias snano='sedit'
 alias vim='nvim'
 
 # Replace batcat with cat on Fedora as batcat is not available as a RPM in any form
-if command -v lsb_release >/dev/null; then
-    DISTRIBUTION=$(lsb_release -si)
-else
-    DISTRIBUTION=$(cat /etc/os-release | grep ^ID= | cut -d'=' -f2)
-fi
-
-if [ "$DISTRIBUTION" = "Fedora" ] || [ "$DISTRIBUTION" = "Arch" ]; then
-	alias cat='bat'
-else
-	alias cat='batcat'
-fi
+#if command -v lsb_release >/dev/null; then
+#    DISTRIBUTION=$(lsb_release -si)
+#else
+#    DISTRIBUTION=$(cat /etc/os-release | grep ^ID= | cut -d'=' -f2)
+#fi
+#
+#if [ "$DISTRIBUTION" = "Fedora" ] || [ "$DISTRIBUTION" = "Arch" ]; then
+#	alias cat='bat'
+#else
+#	alias cat='batcat'
+#fi
 
 # To have colors for ls and all grep commands such as grep, egrep and zgrep
 export CLICOLOR=1
@@ -428,6 +428,14 @@ distribution () {
 
     echo $dtype
 }
+
+
+DISTRIBUTION=$(distribution)
+if [ "$DISTRIBUTION" = "redhat" ] || [ "$DISTRIBUTION" = "arch" ]; then
+      alias cat='bat'
+else
+      alias cat='batcat'
+fi 
 
 # Show the current version of the operating system
 ver() {
