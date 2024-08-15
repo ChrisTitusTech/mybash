@@ -131,30 +131,36 @@ installDepend() {
         ${SUDO_CMD} ${PACKAGER} -v ${DEPENDENCIES}
     elif [ "$PACKAGER" = "nix-env" ]; then
         ${SUDO_CMD} ${PACKAGER} -iA nixos.bash nixos.bash-completion nixos.gnutar nixos.neovim nixos.bat nixos.tree nixos.multitail nixos.fastfetch  nixos.pkgs.starship
-    elif [[ "$PACKAGER" == "dnf" ]]; then
+    elif [ "$PACKAGER" = "dnf" ]; then
         ${SUDO_CMD} ${PACKAGER} install -y ${DEPENDENCIES}
     else
         ${SUDO_CMD} ${PACKAGER} install -yq ${DEPENDENCIES}
     fi
 
-    # Check to see if the FiraCode Nerd Font is installed (Change this to whatever font you would like)
-    FONT_NAME="FiraCode Nerd Font"
+    # Check to see if the MesloLGS Nerd Font is installed (Change this to whatever font you would like)
+    FONT_NAME="MesloLGS Nerd Font Mono"
     if fc-list :family | grep -iq "$FONT_NAME"; then
         echo "Font '$FONT_NAME' is installed."
     else
         echo "Installing font '$FONT_NAME'"
         # Change this URL to correspond with the correct font
-        FONT_URL="https://github.com/ryanoasis/nerd-fonts/releases/download/v2.3.3/FiraCode.zip"
+        FONT_URL="https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Meslo.zip"
         FONT_DIR="$HOME/.local/share/fonts"
-        wget $FONT_URL -O ${FONT_NAME}.zip
-        unzip ${FONT_NAME}.zip -d $FONT_NAME
-        mkdir -p $FONT_DIR
-        mv ${FONT_NAME}/*.ttf $FONT_DIR/
-        # Update the font cache
-        fc-cache -fv
-        # delete the files created from this
-        rm -rf ${FONT_NAME} ${FONT_NAME}.zip
-        echo "'$FONT_NAME' installed successfully."
+        # check if the file is accessible
+        if wget -q --spider "$FONT_URL"; then
+            TEMP_DIR=$(mktemp -d)
+            wget -q --show-progress $FONT_URL -O "$TEMP_DIR"/"${FONT_NAME}".zip
+            unzip "$TEMP_DIR"/"${FONT_NAME}".zip -d "$TEMP_DIR"
+            mkdir -p "$FONT_DIR"/"$FONT_NAME"
+            mv "${TEMP_DIR}"/*.ttf "$FONT_DIR"/"$FONT_NAME"
+            # Update the font cache
+            fc-cache -fv
+            # delete the files created from this
+            rm -rf "${TEMP_DIR}"
+            echo "'$FONT_NAME' installed successfully."
+        else
+            echo "Font '$FONT_NAME' not installed. Font URL is not accessible."
+        fi
     fi
 }
 
