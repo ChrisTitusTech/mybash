@@ -256,16 +256,14 @@ linkConfig() {
     fi
 
     if cat "$CURRENT_BASHRC" | grep -q ". $GITPATH/.bashrc"; then
-        echo "${YELLOW}New bash config is already being sourced, continuing${RC}"
-        return 0
+        echo "Bash config is already being sourced${RC}"
     else
-        echo "${GREEN}Appending to current bash config${RC}"
+        echo "Appending to current bash config"
         cat >> $CURRENT_BASHRC << EOF
 
-## Source ChrisTitusTech's bash config
+## ChrisTitusTech's bash config
 . $GITPATH/.bashrc
 EOF
-        return $?
     fi
 }
 
