@@ -1,5 +1,14 @@
 #!/bin/sh -e
 
+# Make sure that echo is posix compliant
+echo() {
+  if [ ! "$BASH_VERSION" = "" ]; then
+    /usr/bin/env echo -e "$@"
+  else
+    /usr/bin/env echo "$@"
+  fi
+}
+
 RC='\033[0m'
 RED='\033[31m'
 YELLOW='\033[33m'
@@ -255,11 +264,11 @@ linkConfig() {
         touch "$CURRENT_BASHRC"
     fi
 
-    if cat "$CURRENT_BASHRC" | grep -q ". $GITPATH/.bashrc"; then
+    if grep -q ". $GITPATH/.bashrc" < "$CURRENT_BASHRC" ; then
         echo "Bash config is already being sourced${RC}"
     else
         echo "Appending to current bash config"
-        cat >> $CURRENT_BASHRC << EOF
+        cat >> "$CURRENT_BASHRC" << EOF
 
 ## ChrisTitusTech's bash config
 . $GITPATH/.bashrc
