@@ -61,6 +61,24 @@ checkEnv() {
         echo "${RED}Can't find a supported package manager${RC}"
         exit 1
     fi
+    
+    if [ "$PACKAGER" = "apt" ]; then
+        echo "${YELLOW}Would you like to install nala for faster package management? (y/n)${RC}"
+        read -r install_nala
+        if [ "$install_nala" = "y" ]; then
+            curl -fsSL https://deb.volian.org/volian/keyring.gpg | sudo gpg --dearmor -o /usr/share/keyrings/volian-archive-keyring.gpg
+            echo "deb [signed-by=/usr/share/keyrings/volian-archive-keyring.gpg] https://deb.volian.org/volian/ scar main" | sudo tee /etc/apt/sources.list.d/volian.list
+            sudo apt update
+            sudo apt install -y nala
+            if command_exists nala; then
+                PACKAGER="nala"
+                echo "${GREEN}Nala installed successfully and will be used as the package manager${RC}"
+            else
+                echo "${RED}Failed to install nala, continuing with apt${RC}"
+            fi
+        fi
+    fi
+
 
     if command_exists sudo; then
         SUDO_CMD="sudo"
