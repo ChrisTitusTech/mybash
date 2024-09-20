@@ -12,16 +12,16 @@ SUDO_CMD=""
 SUGROUP=""
 GITPATH=""
 
+# Helper functions
 print_colored() {
-    color=$1
-    message=$2
-    printf "${color}%s${RC}\n" "$message"
+    printf "${1}%s${RC}\n" "$2"
 }
 
 command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
+# Setup functions
 setup_directories() {
     if [ ! -d "$LINUXTOOLBOXDIR" ]; then
         print_colored "$YELLOW" "Creating linuxtoolbox directory: $LINUXTOOLBOXDIR"
@@ -43,6 +43,7 @@ setup_directories() {
 }
 
 check_environment() {
+    # Check for required commands
     REQUIREMENTS='curl groups sudo'
     for req in $REQUIREMENTS; do
         if ! command_exists "$req"; then
@@ -51,6 +52,7 @@ check_environment() {
         fi
     done
 
+    # Determine package manager
     PACKAGEMANAGER='nala apt dnf yum pacman zypper emerge xbps-install nix-env'
     for pgm in $PACKAGEMANAGER; do
         if command_exists "$pgm"; then
@@ -65,6 +67,7 @@ check_environment() {
         exit 1
     fi
 
+    # Determine sudo command
     if command_exists sudo; then
         SUDO_CMD="sudo"
     elif command_exists doas && [ -f "/etc/doas.conf" ]; then
@@ -72,15 +75,16 @@ check_environment() {
     else
         SUDO_CMD="su -c"
     fi
-
     printf "Using %s as privilege escalation software\n" "$SUDO_CMD"
 
+    # Check write permissions
     GITPATH=$(dirname "$(realpath "$0")")
     if [ ! -w "$GITPATH" ]; then
         print_colored "$RED" "Can't write to $GITPATH"
         exit 1
     fi
 
+    # Check superuser group
     SUPERUSERGROUP='wheel sudo root'
     for sug in $SUPERUSERGROUP; do
         if groups | grep -q "$sug"; then
@@ -103,39 +107,51 @@ install_dependencies() {
     fi
 
     print_colored "$YELLOW" "Installing dependencies..."
-    if [ "$PACKAGER" = "pacman" ]; then
-        if ! command_exists yay && ! command_exists paru; then
-            printf "Installing yay as AUR helper...\n"
-            ${SUDO_CMD} ${PACKAGER} --noconfirm -S base-devel
-            cd /opt && ${SUDO_CMD} git clone https://aur.archlinux.org/yay-git.git && ${SUDO_CMD} chown -R "${USER}:${USER}" ./yay-git
-            cd yay-git && makepkg --noconfirm -si
-        else
-            printf "AUR helper already installed\n"
-        fi
-        if command_exists yay; then
-            AUR_HELPER="yay"
-        elif command_exists paru; then
-            AUR_HELPER="paru"
-        else
-            printf "No AUR helper found. Please install yay or paru.\n"
-            exit 1
-        fi
-        ${AUR_HELPER} --noconfirm -S ${DEPENDENCIES}
-    elif [ "$PACKAGER" = "nala" ]; then
-        ${SUDO_CMD} ${PACKAGER} install -y ${DEPENDENCIES}
-    elif [ "$PACKAGER" = "emerge" ]; then
-        ${SUDO_CMD} ${PACKAGER} -v app-shells/bash app-shells/bash-completion app-arch/tar app-editors/neovim sys-apps/bat app-text/tree app-text/multitail app-misc/fastfetch app-misc/trash-cli
-    elif [ "$PACKAGER" = "xbps-install" ]; then
-        ${SUDO_CMD} ${PACKAGER} -v ${DEPENDENCIES}
-    elif [ "$PACKAGER" = "nix-env" ]; then
-        ${SUDO_CMD} ${PACKAGER} -iA nixos.bash nixos.bash-completion nixos.gnutar nixos.neovim nixos.bat nixos.tree nixos.multitail nixos.fastfetch nixos.pkgs.starship nixos.trash-cli
-    elif [ "$PACKAGER" = "dnf" ]; then
-        ${SUDO_CMD} ${PACKAGER} install -y ${DEPENDENCIES}
-    else
-        ${SUDO_CMD} ${PACKAGER} install -yq ${DEPENDENCIES}
-    fi
+    case "$PACKAGER" in
+        pacman)
+            install_pacman_dependencies
+            ;;
+        nala)
+            ${SUDO_CMD} ${PACKAGER} install -y ${DEPENDENCIES}
+            ;;
+        emerge)
+            ${SUDO_CMD} ${PACKAGER} -v app-shells/bash app-shells/bash-completion app-arch/tar app-editors/neovim sys-apps/bat app-text/tree app-text/multitail app-misc/fastfetch app-misc/trash-cli
+            ;;
+        xbps-install)
+            ${SUDO_CMD} ${PACKAGER} -v ${DEPENDENCIES}
+            ;;
+        nix-env)
+            ${SUDO_CMD} ${PACKAGER} -iA nixos.bash nixos.bash-completion nixos.gnutar nixos.neovim nixos.bat nixos.tree nixos.multitail nixos.fastfetch nixos.pkgs.starship nixos.trash-cli
+            ;;
+        dnf)
+            ${SUDO_CMD} ${PACKAGER} install -y ${DEPENDENCIES}
+            ;;
+        *)
+            ${SUDO_CMD} ${PACKAGER} install -yq ${DEPENDENCIES}
+            ;;
+    esac
 
     install_font
+}
+
+install_pacman_dependencies() {
+    if ! command_exists yay && ! command_exists paru; then
+        printf "Installing yay as AUR helper...\n"
+        ${SUDO_CMD} ${PACKAGER} --noconfirm -S base-devel
+        cd /opt && ${SUDO_CMD} git clone https://aur.archlinux.org/yay-git.git && ${SUDO_CMD} chown -R "${USER}:${USER}" ./yay-git
+        cd yay-git && makepkg --noconfirm -si
+    else
+        printf "AUR helper already installed\n"
+    fi
+    if command_exists yay; then
+        AUR_HELPER="yay"
+    elif command_exists paru; then
+        AUR_HELPER="paru"
+    else
+        printf "No AUR helper found. Please install yay or paru.\n"
+        exit 1
+    fi
+    ${AUR_HELPER} --noconfirm -S ${DEPENDENCIES}
 }
 
 install_font() {
@@ -211,6 +227,7 @@ create_fastfetch_config() {
 link_config() {
     USER_HOME=$(getent passwd "${SUDO_USER:-$USER}" | cut -d: -f6)
     OLD_BASHRC="$USER_HOME/.bashrc"
+    BASH_PROFILE="$USER_HOME/.bash_profile"
     
     if [ -e "$OLD_BASHRC" ]; then
         print_colored "$YELLOW" "Moving old bash config file to $USER_HOME/.bashrc.bak"
@@ -225,8 +242,18 @@ link_config() {
         print_colored "$RED" "Failed to create symbolic links"
         exit 1
     fi
+
+    # Create .bash_profile if it doesn't exist
+    if [ ! -f "$BASH_PROFILE" ]; then
+        print_colored "$YELLOW" "Creating .bash_profile..."
+        echo "[ -f ~/.bashrc ] && . ~/.bashrc" > "$BASH_PROFILE"
+        print_colored "$GREEN" ".bash_profile created and configured to source .bashrc"
+    else
+        print_colored "$YELLOW" ".bash_profile already exists. Please ensure it sources .bashrc if needed."
+    fi
 }
 
+# Main execution
 setup_directories
 check_environment
 install_dependencies
