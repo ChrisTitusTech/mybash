@@ -2,7 +2,7 @@
 iatest=$(expr index "$-" i)
 
 #######################################################
-# SOURCED ALIAS'S AND SCRIPTS BY zachbrowne.me
+# SOURCED ALIASES AND SCRIPTS BY zachbrowne.me
 #######################################################
 if [ -f /usr/bin/fastfetch ]; then
 	fastfetch
@@ -93,22 +93,22 @@ export LESS_TERMCAP_ue=$'\E[0m'
 export LESS_TERMCAP_us=$'\E[01;32m'
 
 #######################################################
-# MACHINE SPECIFIC ALIAS'S
+# MACHINE SPECIFIC ALIASES
 #######################################################
 
-# Alias's for SSH
+# aliases for SSH
 # alias SERVERNAME='ssh YOURWEBSITE.com -l USERNAME -p PORTNUMBERHERE'
 
-# Alias's to change the directory
+# aliases to change the directory
 alias web='cd /var/www/html'
 
-# Alias's to mount ISO files
+# aliases to mount ISO files
 # mount -o loop /home/NAMEOFISO.iso /home/ISOMOUNTDIR/
 # umount /home/NAMEOFISO.iso
 # (Both commands done as root only.)
 
 #######################################################
-# GENERAL ALIAS'S
+# GENERAL ALIASES
 #######################################################
 # To temporarily bypass an alias, we precede the command with a \
 # EG: the ls command is aliased, but to use the normal ls command you would type \ls
@@ -126,7 +126,7 @@ alias hlp='less ~/.bashrc_help'
 # alias to show the date
 alias da='date "+%Y-%m-%d %A %T %Z"'
 
-# Alias's to modified commands
+# aliases to modified commands
 alias cp='cp -i'
 alias mv='mv -i'
 alias rm='trash -v'
@@ -157,7 +157,7 @@ alias bd='cd "$OLDPWD"'
 # Remove a directory and all files
 alias rmd='/bin/rm  --recursive --force --verbose '
 
-# Alias's for multiple directory listing commands
+# aliases for multiple directory listing commands
 alias la='ls -Alh'                # show hidden files
 alias ls='ls -aFh --color=always' # add colors and file type extensions
 alias lx='ls -lXBh'               # sort by extension
@@ -203,11 +203,11 @@ alias checkcommand="type -t"
 # Show open ports
 alias openports='netstat -nape --inet'
 
-# Alias's for safe and forced reboots
+# aliases for safe and forced reboots
 alias rebootsafe='sudo shutdown -r now'
 alias rebootforce='sudo shutdown -r -n now'
 
-# Alias's to show disk space and space used in a folder
+# aliases to show disk space and space used in a folder
 alias diskspace="du -S | sort -n -r |more"
 alias folders='du -h --max-depth=1'
 alias folderssort='find . -maxdepth 1 -type d -print0 | xargs -0 du -sk | sort -rn'
@@ -215,7 +215,7 @@ alias tree='tree -CAhF --dirsfirst'
 alias treed='tree -CAFd'
 alias mountedinfo='df -hT'
 
-# Alias's for archives
+# aliases for archives
 alias mktar='tar -cvf'
 alias mkbz2='tar -cvjf'
 alias mkgz='tar -cvzf'
