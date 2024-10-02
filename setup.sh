@@ -1,5 +1,14 @@
 #!/bin/sh -e
 
+# Make sure that echo is posix compliant
+echo() {
+  if [ ! "$BASH_VERSION" = "" ]; then
+    /usr/bin/env echo -e "$@"
+  else
+    /usr/bin/env echo "$@"
+  fi
+}
+
 RC='\033[0m'
 RED='\033[31m'
 YELLOW='\033[33m'
@@ -248,25 +257,23 @@ create_fastfetch_config() {
 linkConfig() {
     ## Get the correct user home directory.
     USER_HOME=$(getent passwd "${SUDO_USER:-$USER}" | cut -d: -f6)
-    ## Check if a bashrc file is already there.
-    OLD_BASHRC="$USER_HOME/.bashrc"
-    if [ -e "$OLD_BASHRC" ]; then
-        echo "${YELLOW}Moving old bash config file to $USER_HOME/.bashrc.bak${RC}"
-        if ! mv "$OLD_BASHRC" "$USER_HOME/.bashrc.bak"; then
-            echo "${RED}Can't move the old bash config file!${RC}"
-            exit 1
-        fi
+    ## Make sure a bashrc file is already there.
+    CURRENT_BASHRC="$USER_HOME/.bashrc"
+    if [ ! -e "$CURRENT_BASHRC" ]; then
+        echo "${YELLOW}$CURRENT_BASHRC doesn't exist, creating it${RC}"
+        touch "$CURRENT_BASHRC"
     fi
 
-    echo "${YELLOW}Linking new bash config file...${RC}"
-    ln -svf "$GITPATH/.bashrc" "$USER_HOME/.bashrc" || {
-        echo "${RED}Failed to create symbolic link for .bashrc${RC}"
-        exit 1
-    }
-    ln -svf "$GITPATH/starship.toml" "$USER_HOME/.config/starship.toml" || {
-        echo "${RED}Failed to create symbolic link for starship.toml${RC}"
-        exit 1
-    }
+    if grep -q ". $GITPATH/.bashrc" < "$CURRENT_BASHRC" ; then
+        echo "Bash config is already being sourced${RC}"
+    else
+        echo "Appending to current bash config"
+        cat >> "$CURRENT_BASHRC" << EOF
+
+## ChrisTitusTech's bash config
+. $GITPATH/.bashrc
+EOF
+    fi
 }
 
 checkEnv
