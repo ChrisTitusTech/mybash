@@ -62,6 +62,23 @@ checkEnv() {
         exit 1
     fi
 
+      if [ "$PACKAGER" = "apt" ]; then
+        echo "${YELLOW}Would you like to install nala for faster package management? (y/n)${RC}"
+        read -r install_nala
+        if [ "$install_nala" = "y" ]; then
+            echo "${YELLOW}Downloading and installing nala...${RC}"
+            curl -LO https://deb.volian.org/volian/pool/main/n/nala/nala_0.11.0_amd64.deb
+            sudo dpkg -i nala_0.11.0_amd64.deb
+            sudo apt-get install -f
+            if command_exists nala; then
+                PACKAGER="nala"
+                echo "${GREEN}Nala installed successfully and will be used as the package manager${RC}"
+            else
+                echo "${RED}Failed to install nala, continuing with apt${RC}"
+            fi
+        fi
+    fi
+  
     if command_exists sudo; then
         SUDO_CMD="sudo"
     elif command_exists doas && [ -f "/etc/doas.conf" ]; then
