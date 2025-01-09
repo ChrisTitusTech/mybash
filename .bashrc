@@ -4,10 +4,8 @@ iatest=$(expr index "$-" i)
 #######################################################
 # SOURCED ALIAS'S AND SCRIPTS BY zachbrowne.me
 #######################################################
-FASTFETCH_PATH=$(which fastfetch 2>/dev/null)
-
-if [ -x "$FASTFETCH_PATH" ]; then
-    "$FASTFETCH_PATH"
+if command -v fastfetch 2>/dev/null; then
+    fastfetch
 fi
 
 # Source global definitions
