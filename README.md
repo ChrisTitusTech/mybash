@@ -22,7 +22,7 @@ This repository provides a comprehensive `.bashrc` configuration along with supp
 To install the `.bashrc` configuration, execute the following commands in your terminal:
 
 ```sh
-git clone --depth=1 https://github.com/ChrisTitusTech/mybash.git
+git clone --depth=1 https://github.com/dacrab/mybash.git
 cd mybash
 ./setup.sh
 ```
