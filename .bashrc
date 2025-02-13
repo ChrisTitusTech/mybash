@@ -4,8 +4,8 @@ iatest=$(expr index "$-" i)
 #######################################################
 # SOURCED ALIASES AND SCRIPTS BY zachbrowne.me
 #######################################################
-if [ -f /usr/bin/fastfetch ]; then
-	fastfetch
+if command -v fastfetch 2>/dev/null; then
+    fastfetch
 fi
 
 # Source global definitions
