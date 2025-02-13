@@ -126,6 +126,9 @@ install_dependencies() {
         dnf)
             ${SUDO_CMD} ${PACKAGER} install -y ${DEPENDENCIES}
             ;;
+        zypper)
+            ${SUDO_CMD} ${PACKAGER} install -n ${DEPENDENCIES}
+            ;;
         *)
             ${SUDO_CMD} ${PACKAGER} install -yq ${DEPENDENCIES}
             ;;
