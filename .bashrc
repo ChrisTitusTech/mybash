@@ -4,8 +4,11 @@ iatest=$(expr index "$-" i)
 #######################################################
 # SOURCED ALIASES AND SCRIPTS BY zachbrowne.me
 #######################################################
-if command -v fastfetch 2>/dev/null; then
-    fastfetch
+if command -v fastfetch &> /dev/null; then
+    # Only run fastfetch if we're in an interactive shell
+    if [[ $- == *i* ]]; then
+        fastfetch
+    fi
 fi
 
 # Source global definitions
@@ -62,11 +65,19 @@ if [[ $iatest -gt 0 ]]; then bind "set completion-ignore-case on"; fi
 if [[ $iatest -gt 0 ]]; then bind "set show-all-if-ambiguous On"; fi
 
 # Set the default editor
-export EDITOR=nvim
-export VISUAL=nvim
+if command -v nvim &> /dev/null; then
+    export EDITOR=nvim
+    export VISUAL=nvim
+    alias vim='nvim'
+    alias vi='nvim'
+    alias svi='sudo nvim'
+    alias vis='nvim "+set si"'
+else
+    export EDITOR=vim
+    export VISUAL=vim
+fi
 alias spico='sudo pico'
 alias snano='sudo nano'
-alias vim='nvim'
 
 # To have colors for ls and all grep commands such as grep, egrep and zgrep
 export CLICOLOR=1
@@ -129,7 +140,11 @@ alias da='date "+%Y-%m-%d %A %T %Z"'
 # aliases to modified commands
 alias cp='cp -i'
 alias mv='mv -i'
-alias rm='trash -v'
+if command -v trash &> /dev/null; then
+    alias rm='trash -v'
+else
+    alias rm='rm -i'  # fallback to interactive remove
+fi
 alias mkdir='mkdir -p'
 alias ps='ps auxf'
 alias less='less -R'
@@ -415,11 +430,13 @@ distribution () {
 
 
 DISTRIBUTION=$(distribution)
-if [ "$DISTRIBUTION" = "redhat" ] || [ "$DISTRIBUTION" = "arch" ]; then
-      alias cat='bat'
-else
-      alias cat='batcat'
-fi 
+if command -v bat &> /dev/null || command -v batcat &> /dev/null; then
+    if [ "$DISTRIBUTION" = "redhat" ] || [ "$DISTRIBUTION" = "arch" ]; then
+        alias cat='bat'
+    else
+        alias cat='batcat'
+    fi
+fi
 
 # Show the current version of the operating system
 ver() {
@@ -630,3 +647,8 @@ export PATH=$PATH:"$HOME/.local/bin:$HOME/.cargo/bin:/var/lib/flatpak/exports/bi
 
 eval "$(starship init bash)"
 eval "$(zoxide init bash)"
+
+# Auto-start DWM if we're on TTY1 and .xinitrc contains "exec dwm"
+if [[ "$(tty)" == "/dev/tty1" ]] && [ -f "$HOME/.xinitrc" ] && grep -q "^exec dwm" "$HOME/.xinitrc"; then
+    startx
+fi
