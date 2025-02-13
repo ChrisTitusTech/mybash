@@ -164,10 +164,11 @@ install_font() {
         FONT_DIR="$HOME/.local/share/fonts"
         if wget -q --spider "$FONT_URL"; then
             TEMP_DIR=$(mktemp -d)
-            wget -q "$FONT_URL" -O "$TEMP_DIR/${FONT_NAME}.zip"
-            unzip "$TEMP_DIR/${FONT_NAME}.zip" -d "$TEMP_DIR"
-            mkdir -p "$FONT_DIR/$FONT_NAME"
-            mv "${TEMP_DIR}"/*.ttf "$FONT_DIR/$FONT_NAME"
+            wget -q $FONT_URL -O "$TEMP_DIR"/"${FONT_NAME}".zip
+            unzip "$TEMP_DIR"/"${FONT_NAME}".zip -d "$TEMP_DIR"
+            mkdir -p "$FONT_DIR"/"$FONT_NAME"
+            mv "${TEMP_DIR}"/*.ttf "$FONT_DIR"/"$FONT_NAME"
+            # Update the font cache
             fc-cache -fv
             rm -rf "${TEMP_DIR}"
             printf "'%s' installed successfully.\n" "$FONT_NAME"
