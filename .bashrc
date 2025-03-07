@@ -644,7 +644,7 @@ phpconfig() {
 	elif [ -f /etc/php5/apache2/php.ini ]; then
 		sedit /etc/php5/apache2/php.ini
 	else
-		echo "Error: php.ini file could not be found."alias bashconfig="code ~/.bashrc"
+		echo "Error: php.ini file could not be found."
 		echo "Searching for possible locations:"
 		sudo updatedb && locate php.ini
 	fi
@@ -710,7 +710,7 @@ function hb {
     fi
 }
 
-#######################################################x
+#######################################################
 # Set the ultimate amazing command prompt
 #######################################################
 
