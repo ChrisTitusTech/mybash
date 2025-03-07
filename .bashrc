@@ -260,6 +260,85 @@ alias docker-clean=' \
 #######################################################
 # SPECIAL FUNCTIONS
 #######################################################
+
+#firewall simple configuration 
+firewall() {
+	echo -e '(1) firewall status\n(2) reset firewall\n(3) reload firewall\n(4) list apps\n(5) allow (PORT)\n (6)deny (PORT)'
+	read option
+	case $option in
+		1)
+		echo -e "sudo efw status \n"
+		sudo ufw status
+		;;
+		2)
+		echo -e "sudo ufw reset \n"
+		sudo ufw reset
+		;;
+		3)
+		echo -e "sudo ufw reload \n"
+		sudo ufw reload
+		;;
+		4)
+		echo -e "sudo ufw app list \n"
+		sudo ufw app list
+		;;
+		5)
+		echo -e "sudo ufw allow (PORT) \n digit a port: "
+		read option2 
+		sudo ufw allow $option2
+        ;;
+        6)
+		echo -e "sudo ufw deny (PORT) \n digit a port: "
+		read option2 
+		sudo ufw deny $option2
+		;;
+		*)
+		echo "Invalid option"
+		;;
+	esac	
+}
+
+# SSH simple manager
+configssh() {
+	echo -e 'SSH MANAGER:\n(1) start\n(2) stop\n(3)restart\n(4)status\n(5)config\n(6)connect to a SSH\n'
+	read option
+	case $option in
+		1)
+		echo -e "sudo systemctl start ssh \n"
+		sudo systemctl start ssh
+		;;
+		2)
+		echo -e "sudo systemctl stop ssh \n"
+		sudo systemctl stop ssh
+		;;
+		3)
+		echo -e "sudo systemctl restart ssh \n"
+		sudo systemctl restart ssh
+		;;
+		4)
+		echo -e "sudo systemctl status ssh \n"
+		sudo systemctl status ssh
+		;;
+		5)
+		echo -e "sudo nano /etc/ssh/sshd_config \n"
+		sudo nano /etc/ssh/sshd_config
+		;;
+		6)
+		echo -e "ssh user@ip -p PORT \n digit user:"
+		read user
+		echo -e "digit ip: "
+		read ip
+		echo -e "digit PORT: "
+		read port
+		sudo ssh $user@$ip -p $port
+		;;
+		*)
+		echo "Invalid option"
+		;;
+	esac	
+
+}
+
 # Extracts any archive(s) (if unp isn't installed)
 extract() {
 	for archive in "$@"; do
@@ -565,7 +644,7 @@ phpconfig() {
 	elif [ -f /etc/php5/apache2/php.ini ]; then
 		sedit /etc/php5/apache2/php.ini
 	else
-		echo "Error: php.ini file could not be found."
+		echo "Error: php.ini file could not be found."alias bashconfig="code ~/.bashrc"
 		echo "Searching for possible locations:"
 		sudo updatedb && locate php.ini
 	fi
@@ -631,7 +710,7 @@ function hb {
     fi
 }
 
-#######################################################
+#######################################################x
 # Set the ultimate amazing command prompt
 #######################################################
 
