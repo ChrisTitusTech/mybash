@@ -265,32 +265,80 @@ alias docker-clean=' \
 firewall() {
 	echo -e '(1) firewall status\n(2) reset firewall\n(3) reload firewall\n(4) list apps\n(5) allow (PORT)\n (6)deny (PORT)'
 	read option
+
+	if command -v ufw &>/dev/null; then
+        FIREWALL="ufw"
+    elif command -v firewall-cmd &>/dev/null; then
+        FIREWALL="firewalld"
+    elif command -v iptables &>/dev/null; then
+        FIREWALL="iptables"
+    else
+        echo "Fail,  firewall not found."
+        return 1
+    fi
+
 	case $option in
 		1)
-		echo -e "sudo efw status \n"
-		sudo ufw status
+	 	echo -e "Firewall status:\n"
+		if [ "$FIREWALL" = "ufw" ]; then
+			sudo ufw status
+		elif [ "$FIREWALL" = "firewalld" ]; then
+			sudo firewall-cmd --state
+		else
+			sudo iptables -L
+		fi
 		;;
 		2)
-		echo -e "sudo ufw reset \n"
-		sudo ufw reset
+		echo -e "Reseting firewall:\n"
+		if [ "$FIREWALL" = "ufw" ]; then
+			sudo ufw reset
+		elif [ "$FIREWALL" = "firewalld" ]; then
+			sudo firewall-cmd --reload
+		else
+			sudo iptables -F
+		fi
 		;;
 		3)
-		echo -e "sudo ufw reload \n"
-		sudo ufw reload
+	    echo -e "Reloading firewall:\n"
+		if [ "$FIREWALL" = "ufw" ]; then
+			sudo ufw reload
+		elif [ "$FIREWALL" = "firewalld" ]; then
+			sudo firewall-cmd --reload
+		else
+			echo ""
+		fi
 		;;
 		4)
-		echo -e "sudo ufw app list \n"
-		sudo ufw app list
+		echo -e "App list:\n"
+		if [ "$FIREWALL" = "ufw" ]; then
+			sudo ufw app list
+		elif [ "$FIREWALL" = "firewalld" ]; then
+			sudo firewall-cmd --get-services
+		else
+			sudo iptables --list
+		fi
 		;;
 		5)
-		echo -e "sudo ufw allow (PORT) \n digit a port: "
-		read option2 
-		sudo ufw allow $option2
+		read -p "Digit a port to allow:\n" allow_port
+		if [ "$FIREWALL" = "ufw" ]; then
+			sudo ufw allow "$allow_port"
+		elif [ "$FIREWALL" = "firewalld" ]; then
+			sudo firewall-cmd --permanent --add-port="$allow_port/tcp"
+			sudo firewall-cmd --reload
+		else
+			sudo iptables -A INPUT -p tcp --dport "$allow_port" -j ACCEPT
+		fi
         ;;
         6)
-		echo -e "sudo ufw deny (PORT) \n digit a port: "
-		read option2 
-		sudo ufw deny $option2
+		read -p "Digit the port to deny:\n" deny_port
+		if [ "$FIREWALL" = "ufw" ]; then
+			sudo ufw deny "$deny_port"
+		elif [ "$FIREWALL" = "firewalld" ]; then
+			sudo firewall-cmd --permanent --remove-port="$deny_port/tcp"
+			sudo firewall-cmd --reload
+		else
+			sudo iptables -A INPUT -p tcp --dport "$deny_port" -j DROP
+		fi
 		;;
 		*)
 		echo "Invalid option"
@@ -300,43 +348,139 @@ firewall() {
 
 # SSH simple manager
 configssh() {
-	echo -e 'SSH MANAGER:\n(1) start\n(2) stop\n(3)restart\n(4)status\n(5)config\n(6)connect to a SSH\n'
+	echo -e 'SSH MANAGER:\n(1) start\n(2) stop\n(3) restart\n(4) status\n(5) config\n(6) connect to SSH\n'
 	read option
+
+	if command -v systemctl &>/dev/null; then
+		INIT_SYSTEM="systemd"
+
+	elif [ -f /etc/init.d/ ] && [ "$(ls -A /etc/init.d/)" ]; then
+		INIT_SYSTEM="SysVinit"
+
+	elif command -v rc-service &>/dev/null; then
+		INIT_SYSTEM="OpenRC"
+
+	elif command -v sv &>/dev/null; then
+		INIT_SYSTEM="runit"
+	else
+		INIT_SYSTEM="Unknown"
+	fi
+
+	echo "System init: $INIT_SYSTEM\n"
+
 	case $option in
 		1)
-		echo -e "sudo systemctl start ssh \n"
-		sudo systemctl start ssh
-		;;
+			case $INIT_SYSTEM in
+				systemd)
+					echo -e "Starting SSH with systemd."
+					sudo systemctl start ssh
+					;;
+				SysVinit)
+					echo -e "Starting SSH with SysVinit."
+					;;
+				OpenRC)
+					echo -e "Starting SSH with OpenRC."
+					sudo rc-service sshd start
+					;;
+				runit)
+					echo -e "Starting SSH with runit."
+					sudo sv start sshd
+					;;
+				*)
+					echo "Unknown init system, unable to start SSH."
+					;;
+			esac
+			;;
 		2)
-		echo -e "sudo systemctl stop ssh \n"
-		sudo systemctl stop ssh
-		;;
+			case $INIT_SYSTEM in
+				systemd)
+					echo -e "Stopping SSH with systemd."
+					sudo systemctl stop ssh
+					;;
+				SysVinit)
+					echo -e "Stopping SSH with SysVinit."
+					sudo service ssh stop
+					;;
+				OpenRC)
+					echo -e "Stopping SSH with OpenRC."
+					sudo rc-service sshd stop
+					;;
+				runit)
+					echo -e "Stopping SSH with runit."
+					sudo sv stop sshd
+					;;
+				*)
+					echo "Fail, unknown init system, unable to stop SSH."
+					;;
+			esac
+			;;
 		3)
-		echo -e "sudo systemctl restart ssh \n"
-		sudo systemctl restart ssh
-		;;
+			case $INIT_SYSTEM in
+				systemd)
+					echo -e "Restarting SSH with systemd."
+					sudo systemctl restart ssh
+					;;
+				SysVinit)
+					echo -e "Restarting SSH with SysVinit."
+					sudo service ssh restart
+					;;
+				OpenRC)
+					echo -e "Restarting SSH with OpenRC."
+					sudo rc-service sshd restart
+					;;
+				runit)
+					echo -e "Restarting SSH with runit."
+					sudo sv restart sshd
+					;;
+				*)
+					echo "Unknown init system, unable to restart SSH."
+					;;
+			esac
+			;;
 		4)
-		echo -e "sudo systemctl status ssh \n"
-		sudo systemctl status ssh
-		;;
+			case $INIT_SYSTEM in
+				systemd)
+					echo -e "Checking SSH status with systemd."
+					sudo systemctl status ssh
+					;;
+				SysVinit)
+					echo -e "Checking SSH status with SysVinit."
+					sudo service ssh status
+					;;
+				OpenRC)
+					echo -e "Checking SSH status with OpenRC."
+					sudo rc-service sshd status
+					;;
+				runit)
+					echo -e "Checking SSH status with runit."
+					sudo sv status sshd
+					;;
+				*)
+					echo "Unknown init system, unable to check SSH status."
+					;;
+			esac
+			;;
 		5)
-		echo -e "sudo nano /etc/ssh/sshd_config \n"
-		sudo nano /etc/ssh/sshd_config
-		;;
+			if [ -f /etc/ssh/sshd_config ]; then
+				echo -e "Opening sshd_config in nano."
+				sudo nano /etc/ssh/sshd_config
+			else
+				echo "Failed to find the sshd_config file."
+			fi
+			;;
 		6)
-		echo -e "ssh user@ip -p PORT \n digit user:"
-		read user
-		echo -e "digit ip: "
-		read ip
-		echo -e "digit PORT: "
-		read port
-		sudo ssh $user@$ip -p $port
-		;;
+			echo -e "Enter username:"
+			read user
+			echo -e "Enter IP address:"
+			read ip
+			echo -e "Enter port:"
+			read port
+			sudo ssh $user@$ip -p $port
+			;;
 		*)
-		echo "Invalid option"
-		;;
-	esac	
-
+			echo "Invalid option"
+			;;
+	esac
 }
 
 # Extracts any archive(s) (if unp isn't installed)
