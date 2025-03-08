@@ -261,6 +261,28 @@ alias docker-clean=' \
 # SPECIAL FUNCTIONS
 #######################################################
 
+
+system_init(){
+	if command -v systemctl &>/dev/null; then
+		INIT_SYSTEM="systemd"
+		INIT_SYSTEM_RESTART="sudo systemctl restart"
+	elif [ -d /etc/init.d/ ] && [ "$(ls -A /etc/init.d/)" ]; then
+		INIT_SYSTEM="SysVinit"
+		INIT_SYSTEM_RESTART="sudo service"
+	elif command -v rc-service &>/dev/null; then
+		INIT_SYSTEM="OpenRC"
+		INIT_SYSTEM_RESTART="sudo rc-service"
+	elif command -v sv &>/dev/null; then	
+		INIT_SYSTEM="runit"
+		INIT_SYSTEM_RESTART="sudo sv restart"
+	else
+		INIT_SYSTEM="Unknown"
+	fi
+}
+system_init
+export INIT_SYSTEM
+export INIT_SYSTEM_RESTART
+
 #firewall simple configuration 
 firewall() {
 	echo -e '(1) firewall status\n(2) reset firewall\n(3) reload firewall\n(4) list apps\n(5) allow (PORT)\n (6)deny (PORT)'
@@ -289,11 +311,11 @@ firewall() {
 		fi
 		;;
 		2)
-		echo -e "Reseting firewall:\n"
+		echo -e "Resetting firewall:\n"
 		if [ "$FIREWALL" = "ufw" ]; then
 			sudo ufw reset
 		elif [ "$FIREWALL" = "firewalld" ]; then
-			sudo firewall-cmd --reload
+			sudo firewall-cmd --complete-reload
 		else
 			sudo iptables -F
 		fi
@@ -305,7 +327,11 @@ firewall() {
 		elif [ "$FIREWALL" = "firewalld" ]; then
 			sudo firewall-cmd --reload
 		else
-			echo ""
+			if [ "$INIT_SYSTEM" = "SysVinit" ] || [ "$INIT_SYSTEM" = "OpenRC" ]; then
+				$INIT_SYSTEM_RESTART $FIREWALL restart
+				else
+				$INIT_SYSTEM_RESTART $FIREWALL   
+			fi	
 		fi
 		;;
 		4)
@@ -319,7 +345,7 @@ firewall() {
 		fi
 		;;
 		5)
-		read -p "Digit a port to allow:\n" allow_port
+		read -p "Digit a port to allow: " allow_port
 		if [ "$FIREWALL" = "ufw" ]; then
 			sudo ufw allow "$allow_port"
 		elif [ "$FIREWALL" = "firewalld" ]; then
@@ -351,21 +377,6 @@ configssh() {
 	echo -e 'SSH MANAGER:\n(1) start\n(2) stop\n(3) restart\n(4) status\n(5) config\n(6) connect to SSH\n'
 	read option
 
-	if command -v systemctl &>/dev/null; then
-		INIT_SYSTEM="systemd"
-
-	elif [ -f /etc/init.d/ ] && [ "$(ls -A /etc/init.d/)" ]; then
-		INIT_SYSTEM="SysVinit"
-
-	elif command -v rc-service &>/dev/null; then
-		INIT_SYSTEM="OpenRC"
-
-	elif command -v sv &>/dev/null; then
-		INIT_SYSTEM="runit"
-	else
-		INIT_SYSTEM="Unknown"
-	fi
-
 	echo "System init: $INIT_SYSTEM\n"
 
 	case $option in
@@ -377,6 +388,8 @@ configssh() {
 					;;
 				SysVinit)
 					echo -e "Starting SSH with SysVinit."
+					sudo service sshd start
+					sudo service ssh start
 					;;
 				OpenRC)
 					echo -e "Starting SSH with OpenRC."
@@ -400,6 +413,7 @@ configssh() {
 				SysVinit)
 					echo -e "Stopping SSH with SysVinit."
 					sudo service ssh stop
+					sudo service sshd stop
 					;;
 				OpenRC)
 					echo -e "Stopping SSH with OpenRC."
