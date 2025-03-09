@@ -262,119 +262,186 @@ alias docker-clean=' \
 #######################################################
 
 
+#sytemd, Sysvinit, Openrc or runit identifier
 system_init(){
 	if command -v systemctl &>/dev/null; then
 		INIT_SYSTEM="systemd"
 		INIT_SYSTEM_RESTART="sudo systemctl restart"
+		INIT_SYSTEM_STOP="sudo systemctl stop"
+		INIT_SYSTEM_START="sudo systemctl start"
+		INIT_SYSTEM_STATUS="sudo systemctl status"
 	elif [ -d /etc/init.d/ ] && [ "$(ls -A /etc/init.d/)" ]; then
 		INIT_SYSTEM="SysVinit"
-		INIT_SYSTEM_RESTART="sudo service"
+		INIT_SYSTEM_DEFAULT="sudo service"
 	elif command -v rc-service &>/dev/null; then
 		INIT_SYSTEM="OpenRC"
-		INIT_SYSTEM_RESTART="sudo rc-service"
+		INIT_SYSTEM_DEFAULT="sudo rc-service"
 	elif command -v sv &>/dev/null; then	
 		INIT_SYSTEM="runit"
 		INIT_SYSTEM_RESTART="sudo sv restart"
+		INIT_SYSTEM_START="sudo sv start"
+		INIT_SYSTEM_STOP="sudo sv stop"
+		INIT_SYSTEM_STATUS="sudo sv status"
 	else
 		INIT_SYSTEM="Unknown"
+		echo -e "[error] system init not found"
 	fi
 }
-system_init
+
+if [ -z "$INIT_SYSTEM" ] || [ INIT_SYSTEM == "Unknown" ]; then  
+	system_init
+fi
+
 export INIT_SYSTEM
+export INIT_SYSTEM_START
+export INIT_SYSTEM_STOP
+export INIT_SYSTEM_STATUS
 export INIT_SYSTEM_RESTART
+
+export INIT_SYSTEM_DEFAULT
+
+# simple manager to start, stop, restart and see the status of aplications
+system(){	
+	echo -e '(1) start\n(2) stop\n(3) restart\n(4) status'
+	read option
+	case $option in 
+		1)
+			echo -e 'name of the app (ex: docker, ssh, Mysql, MongoDb...):\n'
+			read app 
+			if [ "$INIT_SYSTEM" = "SysVinit" ] || [ "$INIT_SYSTEM" = "OpenRC" ]; then
+				$INIT_SYSTEM_DEFAULT $FIREWALL start
+				else
+				$INIT_SYSTEM_START $app   
+			fi	
+		;;
+
+		2)
+			echo -e 'name of the app (ex: docker, ssh, Mysql, MongoDb...):\n'
+			read app 
+			if [ "$INIT_SYSTEM" = "SysVinit" ] || [ "$INIT_SYSTEM" = "OpenRC" ]; then
+				$INIT_SYSTEM_DEFAULT $FIREWALL stop
+				else
+				$INIT_SYSTEM_STOP $app   
+			fi	
+		;;
+
+		3)
+			echo -e 'name of the app (ex: docker, ssh, Mysql, MongoDb..):\n'
+			read app 
+			if [ "$INIT_SYSTEM" = "SysVinit" ] || [ "$INIT_SYSTEM" = "OpenRC" ]; then
+				$INIT_SYSTEM_DEFAULT $FIREWALL restart
+				else
+				$INIT_SYSTEM_RESTART $app   
+			fi	
+		;;
+
+		4)
+			echo -e 'name of the app (ex: docker, ssh, Mysql, MongoDb..):\n'
+			read app 
+			if [ "$INIT_SYSTEM" = "SysVinit" ] || [ "$INIT_SYSTEM" = "OpenRC" ]; then
+				$INIT_SYSTEM_DEFAULT $FIREWALL restart
+				else
+				$INIT_SYSTEM_STATUS $app   
+			fi	
+
+		;;
+
+	esac 
+}
+
 
 #firewall simple configuration 
 firewall() {
-	echo -e '(1) firewall status\n(2) reset firewall\n(3) reload firewall\n(4) list apps\n(5) allow (PORT)\n (6)deny (PORT)'
-	read option
+		echo -e '(1) firewall status\n(2) reset firewall\n(3) reload firewall\n(4) list apps\n(5) allow (PORT)\n(6) deny (PORT)'
+		read option
 
-	if command -v ufw &>/dev/null; then
-        FIREWALL="ufw"
-    elif command -v firewall-cmd &>/dev/null; then
-        FIREWALL="firewalld"
-    elif command -v iptables &>/dev/null; then
-        FIREWALL="iptables"
-    else
-        echo "Fail,  firewall not found."
-        return 1
-    fi
+		if command -v ufw &>/dev/null; then
+			FIREWALL="ufw"
+		elif command -v firewall-cmd &>/dev/null; then
+			FIREWALL="firewalld"
+		elif command -v iptables &>/dev/null; then
+			FIREWALL="iptables"
+		else
+			echo "Fail,  firewall not found."
+			return 1
+		fi
 
-	case $option in
-		1)
-	 	echo -e "Firewall status:\n"
-		if [ "$FIREWALL" = "ufw" ]; then
-			sudo ufw status
-		elif [ "$FIREWALL" = "firewalld" ]; then
-			sudo firewall-cmd --state
-		else
-			sudo iptables -L
-		fi
-		;;
-		2)
-		echo -e "Resetting firewall:\n"
-		if [ "$FIREWALL" = "ufw" ]; then
-			sudo ufw reset
-		elif [ "$FIREWALL" = "firewalld" ]; then
-			sudo firewall-cmd --complete-reload
-		else
-			sudo iptables -F
-		fi
-		;;
-		3)
-	    echo -e "Reloading firewall:\n"
-		if [ "$FIREWALL" = "ufw" ]; then
-			sudo ufw reload
-		elif [ "$FIREWALL" = "firewalld" ]; then
-			sudo firewall-cmd --reload
-		else
-			if [ "$INIT_SYSTEM" = "SysVinit" ] || [ "$INIT_SYSTEM" = "OpenRC" ]; then
-				$INIT_SYSTEM_RESTART $FIREWALL restart
-				else
-				$INIT_SYSTEM_RESTART $FIREWALL   
-			fi	
-		fi
-		;;
-		4)
-		echo -e "App list:\n"
-		if [ "$FIREWALL" = "ufw" ]; then
-			sudo ufw app list
-		elif [ "$FIREWALL" = "firewalld" ]; then
-			sudo firewall-cmd --get-services
-		else
-			sudo iptables --list
-		fi
-		;;
-		5)
-		read -p "Digit a port to allow: " allow_port
-		if [ "$FIREWALL" = "ufw" ]; then
-			sudo ufw allow "$allow_port"
-		elif [ "$FIREWALL" = "firewalld" ]; then
-			sudo firewall-cmd --permanent --add-port="$allow_port/tcp"
-			sudo firewall-cmd --reload
-		else
-			sudo iptables -A INPUT -p tcp --dport "$allow_port" -j ACCEPT
-		fi
-        ;;
-        6)
-		read -p "Digit the port to deny:\n" deny_port
-		if [ "$FIREWALL" = "ufw" ]; then
-			sudo ufw deny "$deny_port"
-		elif [ "$FIREWALL" = "firewalld" ]; then
-			sudo firewall-cmd --permanent --remove-port="$deny_port/tcp"
-			sudo firewall-cmd --reload
-		else
-			sudo iptables -A INPUT -p tcp --dport "$deny_port" -j DROP
-		fi
-		;;
-		*)
-		echo "Invalid option"
-		;;
-	esac	
-}
+		case $option in
+			1)
+			echo -e "Firewall status:\n"
+			if [ "$FIREWALL" = "ufw" ]; then
+				sudo ufw status
+			elif [ "$FIREWALL" = "firewalld" ]; then
+				sudo firewall-cmd --state
+			else
+				sudo iptables -L
+			fi
+			;;
+			2)
+			echo -e "Resetting firewall:\n"
+			if [ "$FIREWALL" = "ufw" ]; then
+				sudo ufw reset
+			elif [ "$FIREWALL" = "firewalld" ]; then
+				sudo firewall-cmd --complete-reload
+			else
+				sudo iptables -F
+			fi
+			;;
+			3)
+			echo -e "Reloading firewall:\n"
+			if [ "$FIREWALL" = "ufw" ]; then
+				sudo ufw reload
+			elif [ "$FIREWALL" = "firewalld" ]; then
+				sudo firewall-cmd --reload
+			else
+				if [ "$INIT_SYSTEM" = "SysVinit" ] || [ "$INIT_SYSTEM" = "OpenRC" ]; then
+					$INIT_SYSTEM_DEFAULT $FIREWALL restart
+					else
+					$INIT_SYSTEM_RESTART $FIREWALL   
+				fi	
+			fi
+			;;
+			4)
+			echo -e "App list:\n"
+			if [ "$FIREWALL" = "ufw" ]; then
+				sudo ufw app list
+			elif [ "$FIREWALL" = "firewalld" ]; then
+				sudo firewall-cmd --get-services
+			else
+				sudo iptables --list
+			fi
+			;;
+			5)
+			read -p "Digit a port to allow: " allow_port
+			if [ "$FIREWALL" = "ufw" ]; then
+				sudo ufw allow "$allow_port"
+			elif [ "$FIREWALL" = "firewalld" ]; then
+				sudo firewall-cmd --permanent --add-port="$allow_port/tcp"
+				sudo firewall-cmd --reload
+			else
+				sudo iptables -A INPUT -p tcp --dport "$allow_port" -j ACCEPT
+			fi
+			;;
+			6)
+			read -p "Digit the port to deny:\n" deny_port
+			if [ "$FIREWALL" = "ufw" ]; then
+				sudo ufw deny "$deny_port"
+			elif [ "$FIREWALL" = "firewalld" ]; then
+				sudo firewall-cmd --permanent --remove-port="$deny_port/tcp"
+				sudo firewall-cmd --reload
+			else
+				sudo iptables -A INPUT -p tcp --dport "$deny_port" -j DROP
+			fi
+			;;
+			*)
+			echo "Invalid option"
+			;;
+		esac	
+	}
 
 # SSH simple manager
 configssh() {
-	echo -e 'SSH MANAGER:\n(1) start\n(2) stop\n(3) restart\n(4) status\n(5) config\n(6) connect to SSH\n'
+	echo -e 'SSH MANAGER:\n(1) start\n(2) stop\n(3) restart\n(4) status\n(5) config SSH\n(6) connect to a SSH\n'
 	read option
 
 	echo "System init: $INIT_SYSTEM\n"
@@ -476,8 +543,8 @@ configssh() {
 			;;
 		5)
 			if [ -f /etc/ssh/sshd_config ]; then
-				echo -e "Opening sshd_config in nano."
-				sudo nano /etc/ssh/sshd_config
+				echo -e "Opening sshd_config in vi."
+				sudo vi /etc/ssh/sshd_config
 			else
 				echo "Failed to find the sshd_config file."
 			fi
