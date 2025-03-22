@@ -1,0 +1,15 @@
+# These are the packages that need to be installed for every command in this bash configuration to work
+bash-completion
+bat
+exa
+fastfetch
+fzf
+git
+git-completion
+starship
+tar
+tmux
+trash-cli
+tree
+unzip
+zoxide
