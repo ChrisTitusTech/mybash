@@ -301,7 +301,8 @@ export INIT_SYSTEM_RESTART
 export INIT_SYSTEM_DEFAULT
 
 # simple manager to start, stop, restart and see the status of aplications
-system(){	
+system(){
+	echo -e 'APPS MANAGER\n'	
 	echo -e '(1) start\n(2) stop\n(3) restart\n(4) status'
 	read option
 	case $option in 
@@ -562,6 +563,54 @@ configssh() {
 			echo "Invalid option"
 			;;
 	esac
+}
+
+# show listening ports
+listenports(){
+    echo -e '(1) list all listening ::ports \n(2) show a listening ::port \n(3) kill a process'
+    read option
+    case $option in 
+        1)
+            if command -v lsof &> /dev/null; then
+                lsof -i
+            elif command -v netstat &> /dev/null; then
+                netstat -tuln
+            elif command -v ss &> /dev/null; then
+                ss -tuln
+            else
+                echo "Error: No suitable command found to list listening ports."
+            fi
+        ;;
+
+        2)
+            echo -e 'digit the port'
+            read port
+            if command -v lsof &> /dev/null; then
+                lsof -i :$port
+            elif command -v netstat &> /dev/null; then
+                netstat -tuln | grep ":$port"
+            elif command -v ss &> /dev/null; then
+                ss -tuln | grep ":$port"
+            else
+                echo "Error: No suitable command found to show the port."
+            fi
+        ;;
+
+        3)
+            echo -e 'digit the pid'
+            read pid
+            if kill -0 $pid &> /dev/null; then
+                kill -9 $pid
+                echo "Process $pid killed."
+            else
+                echo "Error: Process $pid not found."
+            fi
+        ;;
+
+        *)
+            echo "Invalid option."
+        ;;
+    esac 
 }
 
 # Extracts any archive(s) (if unp isn't installed)
@@ -935,9 +984,22 @@ function hb {
     fi
 }
 
+
 #######################################################
 # Set the ultimate amazing command prompt
 #######################################################
+
+
+alias bashconfig="code ~/.bashrc"
+alias bashrestart="source ~/.bashrc"
+alias fullupdate="sudo apt update && sudo apt upgrade"
+
+mycommands(){
+	echo -e '1- firewall\n2- bashconfig\n3- bashrestart\n4- fullupdate\n5- configssh\n6- system\n7- configssh\n8- listenports \n9- morecommands(to see more)'
+}
+morecommands(){
+	echo -e '9- distribution\n10- ver\n11- apachelog\n12- apacheconfig\n13- phpconfig\n14- mysqlconfig\n15- whatismyip\n16- trim\n17- ftext\n18- extract\n19- cpg\n20- mvg\n21- mkdirg\n22- up\n23- pwdtail'
+}
 
 alias hug="hugo server -F --bind=10.0.0.97 --baseURL=http://10.0.0.97"
 
