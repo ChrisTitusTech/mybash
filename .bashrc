@@ -255,7 +255,9 @@ alias docker-clean=' \
   docker container prune -f ; \
   docker image prune -f ; \
   docker network prune -f ; \
-  docker volume prune -f ; \
+  docker volume prune -f '
+
+alias docker-clean-ext=' \
   docker rm -vf $(docker ps -aq) ; \
   docker rmi -f $(docker images -aq) ; \
   docker system prune -a -f '
