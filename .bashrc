@@ -249,18 +249,21 @@ alias clickpaste='sleep 3; xdotool type "$(xclip -o -selection clipboard)"'
 
 alias kssh="kitty +kitten ssh"
 
-# alias to cleanup unused docker containers, images, networks, and volumes
+# alias to cleanup unused docker containers, images, networks, and volumes and includes the "nuke" option to cleanup active containers
 
 alias docker-clean=' \
   docker container prune -f ; \
   docker image prune -f ; \
   docker network prune -f ; \
-  docker volume prune -f '
-
-alias docker-nuke=' \
-  docker rm -vf $(docker ps -aq) ; \
-  docker rmi -f $(docker images -aq) ; \
-  docker system prune -a -f '
+  docker volume prune -f ; \
+  if [ -n "$(docker images -aq)" ]; then \
+    docker rmi -f $(docker images -aq) ; \
+  fi ; \
+  read -p "Are you sure you want to remove ALL running containers? (y/n): " confirm; \
+  if [ "$confirm" = "y" ]; then \
+    docker rm -vf $(docker ps -aq); \
+  fi ; \
+  docker system prune -a -f'
 
 #######################################################
 # SPECIAL FUNCTIONS
