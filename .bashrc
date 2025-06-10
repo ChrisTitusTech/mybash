@@ -1,14 +1,10 @@
 #!/usr/bin/env bash
 iatest=$(expr index "$-" i)
-
 #######################################################
-# SOURCED ALIASES AND SCRIPTS BY zachbrowne.me
+# SOURCED ALIAS'S AND SCRIPTS BY zachbrowne.me
 #######################################################
-if command -v fastfetch &> /dev/null; then
-    # Only run fastfetch if we're in an interactive shell
-    if [[ $- == *i* ]]; then
-        fastfetch
-    fi
+if [ -f /usr/bin/fastfetch ]; then
+	fastfetch
 fi
 
 # Source global definitions
@@ -65,19 +61,11 @@ if [[ $iatest -gt 0 ]]; then bind "set completion-ignore-case on"; fi
 if [[ $iatest -gt 0 ]]; then bind "set show-all-if-ambiguous On"; fi
 
 # Set the default editor
-if command -v nvim &> /dev/null; then
-    export EDITOR=nvim
-    export VISUAL=nvim
-    alias vim='nvim'
-    alias vi='nvim'
-    alias svi='sudo nvim'
-    alias vis='nvim "+set si"'
-else
-    export EDITOR=vim
-    export VISUAL=vim
-fi
+export EDITOR=nvim
+export VISUAL=nvim
 alias spico='sudo pico'
 alias snano='sudo nano'
+alias vim='nvim'
 
 # To have colors for ls and all grep commands such as grep, egrep and zgrep
 export CLICOLOR=1
@@ -104,22 +92,22 @@ export LESS_TERMCAP_ue=$'\E[0m'
 export LESS_TERMCAP_us=$'\E[01;32m'
 
 #######################################################
-# MACHINE SPECIFIC ALIASES
+# MACHINE SPECIFIC ALIAS'S
 #######################################################
 
-# aliases for SSH
+# Alias's for SSH
 # alias SERVERNAME='ssh YOURWEBSITE.com -l USERNAME -p PORTNUMBERHERE'
 
-# aliases to change the directory
+# Alias's to change the directory
 alias web='cd /var/www/html'
 
-# aliases to mount ISO files
+# Alias's to mount ISO files
 # mount -o loop /home/NAMEOFISO.iso /home/ISOMOUNTDIR/
 # umount /home/NAMEOFISO.iso
 # (Both commands done as root only.)
 
 #######################################################
-# GENERAL ALIASES
+# GENERAL ALIAS'S
 #######################################################
 # To temporarily bypass an alias, we precede the command with a \
 # EG: the ls command is aliased, but to use the normal ls command you would type \ls
@@ -137,16 +125,13 @@ alias hlp='less ~/.bashrc_help'
 # alias to show the date
 alias da='date "+%Y-%m-%d %A %T %Z"'
 
-# aliases to modified commands
+# Alias's to modified commands
 alias cp='cp -i'
 alias mv='mv -i'
-if command -v trash &> /dev/null; then
-    alias rm='trash -v'
-else
-    alias rm='rm -i'  # fallback to interactive remove
-fi
+alias rm='trash -v'
 alias mkdir='mkdir -p'
 alias ps='ps auxf'
+alias ping='ping -c 10'
 alias less='less -R'
 alias cls='clear'
 alias apt-get='sudo apt-get'
@@ -155,7 +140,7 @@ alias freshclam='sudo freshclam'
 alias vi='nvim'
 alias svi='sudo vi'
 alias vis='nvim "+set si"'
-
+alias yayf="yay -Slq | fzf --multi --preview 'yay -Sii {1}' --preview-window=down:75% | xargs -ro yay -S"
 
 # Change directory aliases
 alias home='cd ~'
@@ -171,7 +156,7 @@ alias bd='cd "$OLDPWD"'
 # Remove a directory and all files
 alias rmd='/bin/rm  --recursive --force --verbose '
 
-# aliases for multiple directory listing commands
+# Alias's for multiple directory listing commands
 alias la='ls -Alh'                # show hidden files
 alias ls='ls -aFh --color=always' # add colors and file type extensions
 alias lx='ls -lXBh'               # sort by extension
@@ -217,11 +202,11 @@ alias checkcommand="type -t"
 # Show open ports
 alias openports='netstat -nape --inet'
 
-# aliases for safe and forced reboots
+# Alias's for safe and forced reboots
 alias rebootsafe='sudo shutdown -r now'
 alias rebootforce='sudo shutdown -r -n now'
 
-# aliases to show disk space and space used in a folder
+# Alias's to show disk space and space used in a folder
 alias diskspace="du -S | sort -n -r |more"
 alias folders='du -h --max-depth=1'
 alias folderssort='find . -maxdepth 1 -type d -print0 | xargs -0 du -sk | sort -rn'
@@ -229,7 +214,7 @@ alias tree='tree -CAhF --dirsfirst'
 alias treed='tree -CAFd'
 alias mountedinfo='df -hT'
 
-# aliases for archives
+# Alias's for archives
 alias mktar='tar -cvf'
 alias mkbz2='tar -cvjf'
 alias mkgz='tar -cvzf'
@@ -430,13 +415,11 @@ distribution () {
 
 
 DISTRIBUTION=$(distribution)
-if command -v bat &> /dev/null || command -v batcat &> /dev/null; then
-    if [ "$DISTRIBUTION" = "redhat" ] || [ "$DISTRIBUTION" = "arch" ]; then
-        alias cat='bat'
-    else
-        alias cat='batcat'
-    fi
-fi
+if [ "$DISTRIBUTION" = "redhat" ] || [ "$DISTRIBUTION" = "arch" ]; then
+      alias cat='bat'
+else
+      alias cat='batcat'
+fi 
 
 # Show the current version of the operating system
 ver() {
@@ -635,7 +618,7 @@ function hb {
 # Set the ultimate amazing command prompt
 #######################################################
 
-alias hug="hugo server -F --bind=10.0.0.97 --baseURL=http://10.0.0.97"
+alias hug="systemctl --user restart hugo"
 
 # Check if the shell is interactive
 if [[ $- == *i* ]]; then
@@ -648,7 +631,11 @@ export PATH=$PATH:"$HOME/.local/bin:$HOME/.cargo/bin:/var/lib/flatpak/exports/bi
 eval "$(starship init bash)"
 eval "$(zoxide init bash)"
 
-# Auto-start DWM if we're on TTY1 and .xinitrc contains "exec dwm"
-if [[ "$(tty)" == "/dev/tty1" ]] && [ -f "$HOME/.xinitrc" ] && grep -q "^exec dwm" "$HOME/.xinitrc"; then
-    startx
+if [[ -z $DISPLAY ]] && [[ $(tty) = /dev/tty1 ]]; then
+
+exec startx
+
 fi
+
+
+
