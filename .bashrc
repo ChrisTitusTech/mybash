@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 iatest=$(expr index "$-" i)
-
 #######################################################
 # SOURCED ALIAS'S AND SCRIPTS BY zachbrowne.me
 #######################################################
@@ -141,7 +140,7 @@ alias freshclam='sudo freshclam'
 alias vi='nvim'
 alias svi='sudo vi'
 alias vis='nvim "+set si"'
-
+alias yayf="yay -Slq | fzf --multi --preview 'yay -Sii {1}' --preview-window=down:75% | xargs -ro yay -S"
 
 # Change directory aliases
 alias home='cd ~'
@@ -511,7 +510,7 @@ function whatsmyip () {
 
     # External IP Lookup
     echo -n "External IP: "
-    curl -s ifconfig.me
+    curl -4 ifconfig.me
 }
 
 # View Apache logs
@@ -619,7 +618,8 @@ function hb {
 # Set the ultimate amazing command prompt
 #######################################################
 
-alias hug="hugo server -F --bind=10.0.0.97 --baseURL=http://10.0.0.97"
+alias hug="systemctl --user restart hugo"
+alias lanm="systemctl --user restart lan-mouse"
 
 # Check if the shell is interactive
 if [[ $- == *i* ]]; then
@@ -631,3 +631,12 @@ export PATH=$PATH:"$HOME/.local/bin:$HOME/.cargo/bin:/var/lib/flatpak/exports/bi
 
 eval "$(starship init bash)"
 eval "$(zoxide init bash)"
+
+if [[ -z $DISPLAY ]] && [[ $(tty) = /dev/tty1 ]]; then
+
+exec startx
+
+fi
+
+
+
