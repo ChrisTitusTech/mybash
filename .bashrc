@@ -500,17 +500,26 @@ install_bashrc_support() {
 alias whatismyip="whatsmyip"
 function whatsmyip () {
     # Internal IP Lookup.
+	if command -v iw &> /dev/null; then
+	    # try to find correct wlan interface on system. Newer Ubuntu uses wlp
+	    DEV=$(iw dev | awk '/Interface/ {interf=$2} END {print interf}')
+	else
+	    #fail back to trying wlan0
+		DEV=wlan0
+	fi
+
     if command -v ip &> /dev/null; then
         echo -n "Internal IP: "
-        ip addr show wlan0 | grep "inet " | awk '{print $2}' | cut -d/ -f1
+        ip addr show $DEV | grep "inet " | awk '{print $2}' | cut -d/ -f1
     else
         echo -n "Internal IP: "
-        ifconfig wlan0 | grep "inet " | awk '{print $2}'
+        ifconfig $DEV | grep "inet " | awk '{print $2}'
     fi
 
     # External IP Lookup
     echo -n "External IP: "
     curl -s ifconfig.me
+	echo -e
 }
 
 # View Apache logs
