@@ -32,7 +32,7 @@ setup_directories() {
     if [ -d "$LINUXTOOLBOXDIR/mybash" ]; then rm -rf "$LINUXTOOLBOXDIR/mybash"; fi
 
     print_colored "$YELLOW" "Cloning mybash repository into: $LINUXTOOLBOXDIR/mybash"
-    if git clone https://github.com/ChrisTitusTech/mybash "$LINUXTOOLBOXDIR/mybash"; then
+    if git clone https://github.com/EthanEJ-star/mybash.git "$LINUXTOOLBOXDIR/mybash"; then
         print_colored "$GREEN" "Successfully cloned mybash repository"
     else
         print_colored "$RED" "Failed to clone mybash repository"
