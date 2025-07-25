@@ -18,7 +18,7 @@ $julia\
 $nodejs\
 $nim\
 $rust\
-[](fg:#86BBD8 bg:#07b570)\
+[](fg:#86BBD8 bg:#069a64)\
 $docker_context\
 [](fg:#06969A bg:#33658A)\
 $time\
@@ -61,7 +61,7 @@ format = '[ $symbol ($version) ]($style)'
 
 [docker_context]
 symbol = " "
-style = "bg:#07b570"
+style = "bg:#069a64"
 format = '[ $symbol $context ]($style)$path'
 
 [elixir]
