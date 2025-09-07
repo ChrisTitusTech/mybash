@@ -125,7 +125,7 @@ alias hlp='less ~/.bashrc_help'
 # alias to show the date
 alias da='date "+%Y-%m-%d %A %T %Z"'
 
-# Alias's to modified commands
+# Alias' to modified commands
 alias cp='cp -i'
 alias mv='mv -i'
 alias rm='trash -v'
@@ -157,26 +157,27 @@ alias bd='cd "$OLDPWD"'
 alias rmd='/bin/rm  --recursive --force --verbose '
 
 # Alias's for multiple directory listing commands
-alias la='ls -Alh'                # show hidden files
-alias ls='ls -aFh --color=always' # add colors and file type extensions
-alias lx='ls -lXBh'               # sort by extension
-alias lk='ls -lSrh'               # sort by size
-alias lc='ls -ltcrh'              # sort by change time
-alias lu='ls -lturh'              # sort by access time
-alias lr='ls -lRh'                # recursive ls
-alias lt='ls -ltrh'               # sort by date
-alias lm='ls -alh |more'          # pipe through 'more'
-alias lw='ls -xAh'                # wide listing format
-alias ll='ls -Fls'                # long listing format
-alias labc='ls -lap'              # alphabetical sort
-alias lf="ls -l | egrep -v '^d'"  # files only
-alias ldir="ls -l | egrep '^d'"   # directories only
-alias lla='ls -Al'                # List and Hidden Files
-alias las='ls -A'                 # Hidden Files
-alias lls='ls -l'                 # List
+alias la='ls -Alh'                								# show hidden files
+alias ls='exa -a -F -H --icons --color=always --group-directories-first --git' 	# add colors and file type extensions
+alias lx='ls -lXBh'               								# sort by extension
+alias lk='ls -lSrh'               								# sort by size
+alias lc='ls -ltcrh'              								# sort by change time
+alias lu='ls -lturh'              								# sort by access time
+alias lr='ls -lRh'                								# recursive ls
+alias lt='ls -ltrh'               								# sort by date
+alias lm='ls -alh |more'          								# pipe through 'more'
+alias lw='ls -xAh'                								# wide listing format
+alias ll='ls -Fls'                								# long listing format
+alias labc='ls -lap'              								# alphabetical sort
+alias lf="ls -l | egrep -v '^d'"  								# files only
+alias ldir="ls -l | egrep '^d'"   								# directories only
+alias lla='ls -Al'                								# List and Hidden Files
+alias las='ls -A'                 								# Hidden Files
+alias lls='ls -l'                 								# List
 
 # alias chmod commands
 alias mx='chmod a+x'
+alias ux='chmod -R u+x'
 alias 000='chmod -R 000'
 alias 644='chmod -R 644'
 alias 666='chmod -R 666'
@@ -237,10 +238,10 @@ alias kssh="kitty +kitten ssh"
 # alias to cleanup unused docker containers, images, networks, and volumes
 
 alias docker-clean=' \
-  docker container prune -f ; \
-  docker image prune -f ; \
-  docker network prune -f ; \
-  docker volume prune -f '
+    docker container prune -f ; \
+    docker image prune -f ; \
+    docker network prune -f ; \
+    docker volume prune -f '
 
 #######################################################
 # SPECIAL FUNCTIONS
@@ -339,7 +340,7 @@ up() {
 	cd $d
 }
 
-# Automatically do an ls after each cd, z, or zoxide
+# Automatically do an ls after each cd, or z
 cd ()
 {
 	if [ -n "$1" ]; then
@@ -348,6 +349,10 @@ cd ()
 		builtin cd ~ && ls
 	fi
 }
+function z() {
+    __zoxide_z "$@" && ls
+}
+
 
 # Returns the last 2 fields of the working directory
 pwdtail() {
@@ -363,12 +368,12 @@ distribution () {
         source /etc/os-release
         case $ID in
             fedora|rhel|centos)
-                dtype="redhat"
+                dtype="redhat"   # Fedora, RHEL, CentOS
                 ;;
             sles|opensuse*)
                 dtype="suse"
                 ;;
-            ubuntu|debian)
+            ubuntu|debian|pop|mint)
                 dtype="debian"
                 ;;
             gentoo)
@@ -385,12 +390,12 @@ distribution () {
                 if [ -n "$ID_LIKE" ]; then
                     case $ID_LIKE in
                         *fedora*|*rhel*|*centos*)
-                            dtype="redhat"
+                            dtype="redhat"   # Fedora, RHEL, CentOS
                             ;;
                         *sles*|*opensuse*)
                             dtype="suse"
                             ;;
-                        *ubuntu*|*debian*)
+                        *ubuntu*|*debian*|*pop*|*mint*)
                             dtype="debian"
                             ;;
                         *gentoo*)
@@ -413,79 +418,29 @@ distribution () {
     echo $dtype
 }
 
-
-DISTRIBUTION=$(distribution)
-if [ "$DISTRIBUTION" = "redhat" ] || [ "$DISTRIBUTION" = "arch" ]; then
-      alias cat='bat'
-else
-      alias cat='batcat'
-fi 
-
-# Show the current version of the operating system
-ver() {
-    local dtype
-    dtype=$(distribution)
-
-    case $dtype in
-        "redhat")
-            if [ -s /etc/redhat-release ]; then
-                cat /etc/redhat-release
-            else
-                cat /etc/issue
-            fi
-            uname -a
-            ;;
-        "suse")
-            cat /etc/SuSE-release
-            ;;
-        "debian")
-            lsb_release -a
-            ;;
-        "gentoo")
-            cat /etc/gentoo-release
-            ;;
-        "arch")
-            cat /etc/os-release
-            ;;
-        "slackware")
-            cat /etc/slackware-version
-            ;;
-        *)
-            if [ -s /etc/issue ]; then
-                cat /etc/issue
-            else
-                echo "Error: Unknown distribution"
-                exit 1
-            fi
-            ;;
-    esac
-}
-
 # Automatically install the needed support files for this .bashrc file
 install_bashrc_support() {
 	local dtype
 	dtype=$(distribution)
 
 	case $dtype in
-		"redhat")
-			sudo yum install multitail tree zoxide trash-cli fzf bash-completion fastfetch
-			;;
+        "redhat")
+            if command -v dnf &> /dev/null; then
+                sudo dnf install multitail tree zoxide trash-cli fzf bash-completion fastfetch bat exa -y
+            else
+                sudo yum install multitail tree zoxide trash-cli fzf bash-completion fastfetch bat exa -y
+            fi
+            ;;
 		"suse")
-			sudo zypper install multitail tree zoxide trash-cli fzf bash-completion fastfetch
+			sudo zypper install multitail tree zoxide trash-cli fzf bash-completion fastfetch bat exa -y
 			;;
 		"debian")
-			sudo apt-get install multitail tree zoxide trash-cli fzf bash-completion
-			# Fetch the latest fastfetch release URL for linux-amd64 deb file
-			FASTFETCH_URL=$(curl -s https://api.github.com/repos/fastfetch-cli/fastfetch/releases/latest | grep "browser_download_url.*linux-amd64.deb" | cut -d '"' -f 4)
-
-			# Download the latest fastfetch deb file
-			curl -sL $FASTFETCH_URL -o /tmp/fastfetch_latest_amd64.deb
-
-			# Install the downloaded deb file using apt-get
-			sudo apt-get install /tmp/fastfetch_latest_amd64.deb
+			sudo apt install multitail tree zoxide starship bat trash-cli fzf bash-completion fastfetch -y
+			# Install exa via cargo...exa is not in apt on Debian 13 yet #sudo apt install exa -y
+			cargo install exa
 			;;
 		"arch")
-			sudo paru multitail tree zoxide trash-cli fzf bash-completion fastfetch
+			paru -S multitail tree zoxide trash-cli fzf bash-completion fastfetch starship exa bat --noconfirm
 			;;
 		"slackware")
 			echo "No install support for Slackware"
@@ -583,7 +538,10 @@ trim() {
 	var="${var%"${var##*[![:space:]]}"}" # remove trailing whitespace characters
 	echo -n "$var"
 }
+
+#######################################################
 # GitHub Titus Additions
+#######################################################
 
 gcom() {
 	git add .
@@ -603,16 +561,75 @@ function hb {
         echo "File path does not exist."
         return
     fi
+}
 
-    uri="http://bin.christitus.com/documents"
-    response=$(curl -s -X POST -d @"$1" "$uri")
-    if [ $? -eq 0 ]; then
-        hasteKey=$(echo $response | jq -r '.key')
-        echo "http://bin.christitus.com/$hasteKey"
-    else
-        echo "Failed to upload the document."
+# PiercingXX Additions
+
+# Starship
+eval "$(starship init bash)"
+# Zoxide
+eval "$(zoxide init bash)"
+# FZF
+source /usr/share/fzf/key-bindings.bash
+source /usr/share/fzf/completion.bash
+
+# Tab completion settings
+bind 'set show-all-if-ambiguous on'
+bind 'TAB:menu-complete'
+
+# PiercingXX maintenance script can be found at git clone https://github.com/piercingxx/piercing-dots
+alias xx='$HOME/maintenance*.sh'
+alias ff='fastfetch'
+alias c='clear'
+
+# The ultimate way to search and install packages using fzf with preview window
+# Software Search
+ss() {
+    local dtype
+    dtype=$(distribution)
+    case "$dtype" in
+        "arch")
+            if command -v paru &> /dev/null; then
+                paru -Slq | fzf --multi --preview 'paru -Sii {1}' --preview-window=down:75% | xargs -ro paru -S
+            elif command -v yay &> /dev/null; then
+                yay -Slq | fzf --multi --preview 'yay -Sii {1}' --preview-window=down:75% | xargs -ro yay -S
+            elif command -v pacman &> /dev/null; then
+                pacman -Slq | fzf --multi --preview 'pacman -Si {1}' --preview-window=down:75% | xargs -ro sudo pacman -S
+            else
+                echo "No supported Arch package manager found (paru, yay, pacman)."
+            fi
+            ;;
+        "debian")
+            apt-cache pkgnames | fzf --multi --preview='apt-cache show {1}' --preview-window=down:75% | xargs -ro sudo apt-get install
+            ;;
+        "redhat")
+            if command -v dnf &> /dev/null; then
+                dnf list available | awk '{print $1}' | fzf --multi --preview='dnf info {1}' --preview-window=down:75% | xargs -ro sudo dnf install
+            else
+                yum list available | awk '{print $1}' | fzf --multi --preview='yum info {1}' --preview-window=down:75% | xargs -ro sudo yum install
+            fi
+            ;;
+        "suse")
+            zypper search -u | awk '{print $3}' | fzf --multi --preview='zypper info {1}' --preview-window=down:75% | xargs -ro sudo zypper install
+            ;;
+        "gentoo")
+            eix -c | awk -F' ' '{print $2}' | fzf --multi --preview='eix {1}' --preview-window=down:75% | xargs -ro sudo emerge
+            ;;
+        "slackware")
+            slackpkg search | awk '{print $1}' | fzf --multi --preview='slackpkg info {1}' --preview-window=down:75% | xargs -ro sudo slackpkg install
+            ;;
+        *)
+            echo "Unknown or unsupported distribution for ss alias."
+            ;;
+    esac
+
+    # Flatpak support (works on any distro if flatpak is installed)
+    if command -v flatpak &> /dev/null; then
+        echo "Flatpak available! Select apps to install:"
+        flatpak remote-ls --app flathub | fzf --multi --preview='flatpak info flathub {1}' --preview-window=down:75% | xargs -ro -I{} flatpak install -y flathub {}
     fi
 }
+alias ss='ss'
 
 #######################################################
 # Set the ultimate amazing command prompt
@@ -629,14 +646,8 @@ fi
 
 export PATH=$PATH:"$HOME/.local/bin:$HOME/.cargo/bin:/var/lib/flatpak/exports/bin:/.local/share/flatpak/exports/bin"
 
-eval "$(starship init bash)"
-eval "$(zoxide init bash)"
-
 if [[ -z $DISPLAY ]] && [[ $(tty) = /dev/tty1 ]]; then
 
 exec startx
 
 fi
-
-
-
