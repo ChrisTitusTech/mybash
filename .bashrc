@@ -232,6 +232,9 @@ alias docker-clean=' \
   docker network prune -f ; \
   docker volume prune -f '
 
+# alias to fix ~/.ssh permissions
+alias sshperms='cd ~ && chmod 600 ~/.ssh/* && chmod 700 ~/.ssh && chmod 644 ~/.ssh/*.pub'
+
 #######################################################
 # SPECIAL FUNCTIONS
 #######################################################
