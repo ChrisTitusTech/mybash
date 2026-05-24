@@ -470,7 +470,13 @@ install_bashrc_support() {
 			sudo apt-get install /tmp/fastfetch_latest_amd64.deb
 			;;
 		"arch")
-			sudo paru multitail tree zoxide trash-cli fzf bash-completion fastfetch
+			if command -v paru >/dev/null 2>&1; then
+				paru -S --needed --noconfirm multitail tree zoxide trash-cli fzf bash-completion fastfetch
+			elif command -v yay >/dev/null 2>&1; then
+				yay -S --needed --noconfirm multitail tree zoxide trash-cli fzf bash-completion fastfetch
+			else
+				echo "Error: No AUR helper (paru/yay) found. Install one first." >&2
+			fi
 			;;
 		"slackware")
 			echo "No install support for Slackware"
