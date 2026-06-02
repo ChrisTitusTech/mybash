@@ -596,7 +596,38 @@ if [[ $- == *i* ]]; then
     bind '"\C-f":"zi\n"'
 fi
 
-export PATH=$PATH:"$HOME/.local/bin:$HOME/.cargo/bin:/var/lib/flatpak/exports/bin:/.local/share/flatpak/exports/bin"
+path_add_first() {
+	local path_entry
+	for path_entry in "$@"; do
+		if [ -d "$path_entry" ]; then
+			case ":$PATH:" in
+				*":$path_entry:"*) ;;
+				*) PATH="$path_entry:$PATH" ;;
+			esac
+		fi
+	done
+}
+
+path_add_first \
+	"$HOME/.local/bin" \
+	"/home/linuxbrew/.linuxbrew/bin" \
+	"/home/linuxbrew/.linuxbrew/sbin" \
+	"$HOME/.linuxbrew/bin" \
+	"$HOME/.linuxbrew/sbin" \
+	"$HOME/.local/share/pnpm" \
+	"$HOME/.npm-global/bin" \
+	"$HOME/.yarn/bin" \
+	"$HOME/.yarn/global/node_modules/.bin" \
+	"$HOME/go/bin" \
+	"$HOME/.deno/bin" \
+	"$HOME/.cargo/bin" \
+	"/var/lib/flatpak/exports/bin" \
+	"/.local/share/flatpak/exports/bin"
+
+export PATH
+
+
+
 
 eval "$(starship init bash)"
 eval "$(zoxide init bash)"
