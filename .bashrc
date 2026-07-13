@@ -656,7 +656,16 @@ install_bashrc_support() {
 		sudo apt-get install multitail tree zoxide trash-cli fzf bash-completion fastfetch
 		;;
 	"arch")
-		sudo pacman -S --needed multitail tree zoxide trash-cli fzf bash-completion fastfetch
+		if command -v paru >/dev/null 2>&1; then
+			paru -S --needed multitail tree zoxide trash-cli fzf bash-completion fastfetch
+		elif command -v yay >/dev/null 2>&1; then
+			yay -S --needed multitail tree zoxide trash-cli fzf bash-completion fastfetch
+		elif command -v pacman >/dev/null 2>&1; then
+			sudo pacman -S --needed multitail tree zoxide trash-cli fzf bash-completion fastfetch
+		else
+			printf '%s\n' "No supported Arch package installer (paru, yay, or pacman) found." >&2
+			return 1
+		fi
 		;;
 	"slackware")
 		echo "No install support for Slackware"
