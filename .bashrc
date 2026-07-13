@@ -232,8 +232,14 @@ command -v freshclam >/dev/null 2>&1 && alias freshclam='sudo freshclam'
 svi() {
 	sudo "${EDITOR:-vi}" "$@"
 }
-if command -v yay >/dev/null 2>&1 && command -v fzf >/dev/null 2>&1; then
+if command -v pacman >/dev/null 2>&1 && command -v yay >/dev/null 2>&1 && command -v fzf >/dev/null 2>&1; then
 	alias yayf="yay -Slq | fzf --multi --preview 'yay -Sii {1}' --preview-window=down:75% | xargs -ro yay -S"
+	alias yayr="yay -Qq | fzf --multi --preview 'yay -Qi {1}' --preview-window=down:75% | xargs -ro yay -Rns"
+fi
+
+if command -v dnf >/dev/null 2>&1 && command -v fzf >/dev/null 2>&1; then
+	alias dnff="dnf --quiet list --available | cut -d ' ' -f 1 | grep '\.' | fzf --multi --preview 'dnf info {1}' --preview-window=down:75% | xargs -ro sudo dnf install"
+	alias dnfr="dnf --quiet list --installed | cut -d ' ' -f 1 | grep '\.' | fzf --multi --preview 'dnf info {1}' --preview-window=down:75% | xargs -ro sudo dnf remove"
 fi
 
 # Change directory aliases
