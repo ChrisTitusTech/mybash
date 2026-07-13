@@ -329,7 +329,7 @@ alias rebootforce='sudo shutdown -r -n now'
 
 # Alias's to show disk space and space used in a folder
 alias diskspace="du -S | sort -n -r |more"
-if du -h --max-depth=1 . >/dev/null 2>&1; then
+if du -h --max-depth=1 /dev/null >/dev/null 2>&1; then
 	alias folders='du -h --max-depth=1'
 else
 	alias folders='du -hd 1'
