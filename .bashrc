@@ -674,7 +674,8 @@ function whatsmyip() {
 	# External IP Lookup
 	echo -n "External IP: "
 	if command -v curl >/dev/null 2>&1; then
-		curl -4fsS --max-time 5 https://ifconfig.me || echo "unknown"
+		curl -4fsS --max-time 5 https://ifconfig.me || printf '%s' "unknown"
+		echo
 	else
 		echo "curl not installed"
 	fi
