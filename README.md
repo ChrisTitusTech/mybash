@@ -29,14 +29,27 @@ cd mybash
 
 The `setup.sh` script automates the installation process by:
 
-- Creating necessary directories (`linuxtoolbox/mybash`)
-- Cloning the repository
+- Creating necessary directories (`~/.local/share/mybash`, `~/.config/starship`, and `~/.config/fastfetch`)
+- Copying the managed repository files into `~/.local/share/mybash`
+- Installing Homebrew on macOS if it is not already installed
+- Installing Bash 5 with Homebrew on macOS
+- Adding Homebrew Bash to `/etc/shells` and setting it as the default login shell on macOS
 - Installing dependencies (bash-completion, neovim, starship, fzf, zoxide)
-- Installing the MesloLGS Nerd Font required for the prompt
-- Linking configuration files (`.bashrc` and `starship.toml`) to your home directory
+- Installing the MesloLGS Nerd Font required for the prompt when available
+- Linking configuration files from `~/.local/share/mybash` to your home directory
+- Linking the fastfetch config to `~/.config/fastfetch/config.jsonc`
+- Ensuring `~/.bash_profile` initializes Homebrew on macOS
+- Ensuring `~/.bash_profile` sources `~/.bashrc` on macOS
 - Setting up additional utilities like `fastfetch`
 
-Ensure you have the required permissions and a supported package manager before running the script.
+On macOS, `setup.sh` may prompt for your password when it adds Homebrew Bash to `/etc/shells` and changes your default shell. Restart Terminal after installation, then verify with:
+
+```sh
+echo "$SHELL"
+bash --version
+```
+
+`$SHELL` should point to the Homebrew Bash path, such as `/opt/homebrew/bin/bash` on Apple Silicon or `/usr/local/bin/bash` on Intel Macs. On Linux, ensure you have the required permissions and a supported package manager.
 
 ## Uninstallation
 
@@ -53,7 +66,7 @@ The `uninstall.sh` script reverses the installation process by:
 - Removing installed dependencies
 - Uninstalling fonts
 - Removing symbolic links to configuration files
-- Deleting the `linuxtoolbox` directory
+- Deleting the `~/.local/share/mybash` directory
 - Cleaning up additional utilities like `starship`, `fzf`, and `zoxide`
 
 After running the script, it's recommended to restart your shell to apply the changes.
