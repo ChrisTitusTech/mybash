@@ -1,4 +1,6 @@
-# ChrisTitusTech's `.bashrc` Configuration
+# ChrisTitusTech's `.bashrc` Configuration (Linux/Mac)
+
+<img width="981" height="509" alt="SCR-20260713-cpkx" src="https://github.com/user-attachments/assets/67dc2cdb-7101-4a20-9635-99c244f24db5" />
 
 ## Overview
 
