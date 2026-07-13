@@ -1,0 +1,124 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+DEST="${STARSHIP_CONFIG:-$HOME/.config/starship.toml}"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+
+SLOTS=(3B4252 434C5E 4C566A 86BBD8 06969A 33658A)
+
+declare -A THEMES=(
+	[ubuntu]="772953 E95420 77216F 5E2750 772953 E95420"
+	[nord]="3B4252 434C5E 4C566A 86BBD8 06969A 33658A"
+	[arch]="2E3B43 1793D1 0F5E8C 33A4DB 0C4A6E 1793D1"
+	[fedora]="2B3A67 3C6EB4 294172 51A2DA 1D2D52 3C6EB4"
+	[debian]="4A0E22 D70A53 A80030 E0467A 6E0024 D70A53"
+	[mint]="264A20 4E9A06 2E6B08 87CF3E 1C3817 4E9A06"
+	[manjaro]="123B22 16A085 0E7A5F 35BF5C 0C2D1A 16A085"
+	[popos]="2B3539 2C7A85 1F5A63 48B9C7 24414A FAA05A"
+	[claude]="2B2A28 C15F3C 8A4A30 D9A87E 6B4232 C15F3C"
+	[kali]="12233A 2777FF 17539E 4D8DFF 0E2A5E 2777FF"
+	[gentoo]="2E2A40 62548E 4A3F73 9B8AC4 39305C 62548E"
+	[dracula]="6272A4 BD93F9 FF79C6 8BE9FD 50FA7B BD93F9"
+)
+
+ORDER=(ubuntu claude arch fedora debian mint manjaro popos kali gentoo dracula nord)
+
+error() {
+	printf 'starship-theme: %s\n' "$*" >&2
+}
+
+find_base() {
+	local candidate slot valid
+	local -a candidates=()
+
+	if [[ -n ${STARSHIP_THEME_BASE:-} ]]; then
+		candidates+=("$STARSHIP_THEME_BASE")
+	fi
+	candidates+=(
+		"$SCRIPT_DIR/starship.toml"
+		"$HOME/.local/share/mybash/starship.toml"
+	)
+
+	for candidate in "${candidates[@]}"; do
+		[[ -f $candidate ]] || continue
+		valid=1
+		for slot in "${SLOTS[@]}"; do
+			if ! grep -q "#$slot" "$candidate"; then
+				valid=0
+				break
+			fi
+		done
+		if ((valid)); then
+			printf '%s\n' "$candidate"
+			return 0
+		fi
+	done
+
+	return 1
+}
+
+list_themes() {
+	local theme
+	printf 'Available palettes:\n'
+	for theme in "${ORDER[@]}"; do
+		printf '  %s\n' "$theme"
+	done
+}
+
+apply_theme() {
+	local name=$1 base temp_file index
+	local -a colors sed_args
+
+	if [[ -z ${THEMES[$name]+set} ]]; then
+		error "unknown palette: $name"
+		list_themes >&2
+		return 1
+	fi
+
+	base=$(find_base) || {
+		error "no pristine mybash starship.toml was found"
+		return 1
+	}
+	read -ra colors <<<"${THEMES[$name]}"
+	mkdir -p "$(dirname -- "$DEST")"
+	temp_file=$(mktemp "${DEST}.tmp.XXXXXX")
+
+	for index in "${!SLOTS[@]}"; do
+		sed_args+=(-e "s/#${SLOTS[$index]}/#${colors[$index]}/g")
+	done
+
+	if ! sed "${sed_args[@]}" "$base" >"$temp_file"; then
+		rm -f "$temp_file"
+		error "failed to build the $name palette"
+		return 1
+	fi
+	mv -f "$temp_file" "$DEST"
+	printf 'Applied "%s" palette to %s\n' "$name" "$DEST"
+}
+
+main() {
+	local choice=${1:-}
+
+	case $choice in
+	list | -l | --list)
+		list_themes
+		;;
+	"")
+		if command -v fzf >/dev/null 2>&1; then
+			choice=$(printf '%s\n' "${ORDER[@]}" | fzf --prompt='Pick a palette: ' --height=40% --reverse) || return 0
+		else
+			printf 'Pick a palette:\n'
+			select choice in "${ORDER[@]}"; do
+				[[ -n $choice ]] && break
+			done
+		fi
+		[[ -n $choice ]] && apply_theme "$choice"
+		;;
+	*)
+		apply_theme "$choice"
+		;;
+	esac
+}
+
+main "$@"

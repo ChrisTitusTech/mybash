@@ -7,6 +7,7 @@ This repository provides a comprehensive `.bashrc` configuration along with supp
 ## Table of Contents
 
 - [Installation](#installation)
+- [Switching Color Palettes](#switching-color-palettes)
 - [Uninstallation](#uninstallation)
 - [Configuration Files](#configuration-files)
   - [.bashrc](#bashrc)
@@ -35,7 +36,9 @@ The `setup.sh` script automates the installation process by:
 - Installing Bash 5 with Homebrew on macOS
 - Adding Homebrew Bash to `/etc/shells` and setting it as the default login shell on macOS
 - Installing dependencies (bash-completion, neovim, starship, fzf, zoxide)
-- Installing the MesloLGS Nerd Font required for the prompt when available
+- Installing Starship and JetBrainsMono Nerd Font on Linux
+- Selecting JetBrainsMono Nerd Font in Ptyxis or GNOME Terminal when available
+- Installing the MesloLGS Nerd Font required for the prompt on macOS when available
 - Linking configuration files from `~/.local/share/mybash` to your home directory
 - Linking the fastfetch config to `~/.config/fastfetch/config.jsonc`
 - Ensuring `~/.bash_profile` initializes Homebrew on macOS
@@ -51,6 +54,20 @@ bash --version
 
 `$SHELL` should point to the Homebrew Bash path, such as `/opt/homebrew/bin/bash` on Apple Silicon or `/usr/local/bin/bash` on Intel Macs. On Linux, ensure you have the required permissions and a supported package manager.
 
+## Switching Color Palettes
+
+Use `starship-theme` to recolor the prompt without changing its layout:
+
+```bash
+starship-theme          # interactive picker
+starship-theme fedora   # apply a palette directly
+starship-theme list     # list available palettes
+```
+
+Available palettes include Ubuntu, Claude, Arch, Fedora, Debian, Mint, Manjaro, Pop!_OS, Kali, Gentoo, Dracula, and the original Nord theme.
+
+![Starship color palettes](assets/palettes.png)
+
 ## Uninstallation
 
 To uninstall the `.bashrc` configuration, run:
@@ -59,13 +76,18 @@ To uninstall the `.bashrc` configuration, run:
 cd mybash
 chmod +x uninstall.sh
 ./uninstall.sh
+./uninstall.sh --keep-deps
 ```
+
+Use `--keep-deps` to remove the mybash configuration while retaining installed software and fonts.
 
 The `uninstall.sh` script reverses the installation process by:
 
 - Removing installed dependencies
 - Uninstalling fonts
 - Removing symbolic links to configuration files
+- Restoring the `.bashrc` backup created during installation
+- Restoring previous Ptyxis or GNOME Terminal font settings
 - Deleting the `~/.local/share/mybash` directory
 - Cleaning up additional utilities like `starship`, `fzf`, and `zoxide`
 
