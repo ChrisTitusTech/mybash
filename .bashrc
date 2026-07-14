@@ -842,7 +842,7 @@ path_add_first \
 	"/home/linuxbrew/.linuxbrew/sbin" \
 	"$HOME/.linuxbrew/bin" \
 	"$HOME/.linuxbrew/sbin" \
-	"$HOME/.local/share/pnpm" \
+	"$HOME/.local/share/pnpm/bin" \
 	"$HOME/.npm-global/bin" \
 	"$HOME/.yarn/bin" \
 	"$HOME/.yarn/global/node_modules/.bin" \
