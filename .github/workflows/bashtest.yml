@@ -26,6 +26,9 @@ jobs:
       if: steps.cache-shellcheck.outputs.cache-hit != 'true'
       run: sudo apt-get install -y shellcheck
 
+    - name: Install rendering test dependency
+      run: sudo apt-get install -y bat
+
     - name: Lint Bash scripts
       run: |
         echo "Running ShellCheck..."
@@ -36,3 +39,6 @@ jobs:
         else
           echo "No linting errors found."
         fi
+
+    - name: Test shell integration
+      run: tests/test_shell_integration.sh

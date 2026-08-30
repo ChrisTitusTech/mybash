@@ -37,14 +37,14 @@ The `setup.sh` script automates the installation process by:
 - Installing Homebrew on macOS if it is not already installed
 - Installing Bash 5 with Homebrew on macOS
 - Adding Homebrew Bash to `/etc/shells` and setting it as the default login shell on macOS
-- Installing dependencies (bash-completion, neovim, starship, fzf, zoxide)
+- Installing dependencies (bash-completion, bat, neovim, starship, fzf, zoxide)
 - Installing Starship and JetBrainsMono Nerd Font on Linux
 - Selecting JetBrainsMono Nerd Font in Ptyxis or GNOME Terminal when available
 - Installing the MesloLGS Nerd Font required for the prompt on macOS when available
 - Linking configuration files from `~/.local/share/mybash` to your home directory
 - Linking the fastfetch config to `~/.config/fastfetch/config.jsonc`
 - Ensuring `~/.bash_profile` initializes Homebrew on macOS
-- Ensuring `~/.bash_profile` sources `~/.bashrc` on macOS
+- Ensuring the active Bash login profile sources `~/.bashrc` on Linux and macOS
 - Setting up additional utilities like `fastfetch`
 
 On macOS, `setup.sh` may prompt for your password when it adds Homebrew Bash to `/etc/shells` and changes your default shell. Restart Terminal after installation, then verify with:
@@ -103,6 +103,7 @@ The `.bashrc` file defines aliases, functions, and environment variables to enha
 
 - **Aliases**: Shortcuts for common commands (e.g., `alias cp='cp -i'`)
 - **Functions**: Custom functions for tasks like extracting archives and copying files with progress
+- **Enhanced `cat` output**: Interactive shells use `batcat --paging=never --style=full` on Debian-family systems, or `bat` with the same options elsewhere. This preserves bat's header, grid, line numbers, and terminal colors. Non-interactive scripts keep the normal `cat`; use `command cat` to bypass the alias interactively.
 
 ### `starship.toml`
 
@@ -132,6 +133,7 @@ The `config.jsonc` file configures [fastfetch](https://github.com/AlexRogalskiy/
 
 3. **Enhancements and Utilities**
    - Improves command output readability with colors
+   - Uses `batcat` or `bat` for interactive `cat` output without changing non-interactive script behavior
    - Introduces safer file operations (e.g., using `trash` instead of `rm`)
    - Integrates Zoxide for easy directory navigation
 

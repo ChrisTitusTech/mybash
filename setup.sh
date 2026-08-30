@@ -325,21 +325,49 @@ link_file() {
 	print_colored "$GREEN" "Linked $target"
 }
 
-ensure_bash_profile_sources_bashrc() {
-	[ "$OS_NAME" = Darwin ] || return 0
+ensure_login_profile_sources_bashrc() {
+	if [ -f "$HOME/.bash_profile" ]; then
+		profile=$HOME/.bash_profile
+	elif [ -f "$HOME/.bash_login" ]; then
+		profile=$HOME/.bash_login
+	elif [ "$OS_NAME" = Darwin ]; then
+		profile=$HOME/.bash_profile
+	else
+		profile=$HOME/.profile
+	fi
 
-	profile=$HOME/.bash_profile
-	if [ -f "$profile" ] && grep -q 'HOME/.bashrc' "$profile"; then
+	if [ -f "$profile" ] && grep -Eq '^[[:space:]]*(\.|source)[[:space:]]+"?(\$\{?HOME\}?|~)/\.bashrc"?[[:space:]]*($|#)' "$profile"; then
 		return 0
 	fi
 
 	{
-		printf '\n# Source .bashrc for interactive bash shells\n'
-		printf '%s\n' "if [ -f \"\$HOME/.bashrc\" ]; then"
+		printf '\n# >>> mybash .bashrc >>>\n'
+		printf '%s\n' "if [ -n \"\${BASH_VERSION:-}\" ] && [ -f \"\$HOME/.bashrc\" ]; then"
 		printf '%s\n' ". \"\$HOME/.bashrc\""
 		printf 'fi\n'
+		printf '# <<< mybash .bashrc <<<\n'
 	} >>"$profile"
-	print_colored "$GREEN" "Updated $profile to source .bashrc"
+	print_colored "$GREEN" "Updated $profile to source .bashrc in login shells"
+}
+
+verify_interactive_cat_alias() {
+	if command_exists batcat; then
+		expected="batcat --paging=never --style=full"
+	elif command_exists bat; then
+		expected="bat --paging=never --style=full"
+	else
+		print_colored "$RED" "bat was installed, but neither batcat nor bat is available in PATH."
+		return 1
+	fi
+
+	alias_output=$(bash --login -ic 'alias cat >&3' 3>&1 >/dev/null 2>/dev/null || true)
+	expected_output="alias cat='$expected'"
+	if [ "$alias_output" = "$expected_output" ]; then
+		print_colored "$GREEN" "Verified interactive cat alias: $expected"
+	else
+		print_colored "$RED" "The interactive cat alias was not loaded from $HOME/.bashrc."
+		return 1
+	fi
 }
 
 ensure_bash_profile_brew_shellenv() {
@@ -378,13 +406,16 @@ install_configs() {
 	link_file "$MYBASHDIR/starship-theme" "$HOME/.local/bin/starship-theme"
 	ensure_homebrew_bash_macos
 	ensure_bash_profile_brew_shellenv
-	ensure_bash_profile_sources_bashrc
+	ensure_login_profile_sources_bashrc
+	verify_interactive_cat_alias
 }
 
-install_dependencies
-install_starship_linux
-install_nerd_font_linux
-install_configs
-configure_terminal_font_linux
+if [ "${MYBASH_SETUP_LIB_ONLY:-0}" -eq 0 ]; then
+	install_dependencies
+	install_starship_linux
+	install_nerd_font_linux
+	install_configs
+	configure_terminal_font_linux
 
-print_colored "$GREEN" "Installation complete. Restart your shell or run: source ~/.bashrc"
+	print_colored "$GREEN" "Installation complete. Restart your shell or run: source ~/.bashrc"
+fi
