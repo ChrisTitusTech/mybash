@@ -217,6 +217,15 @@ alias ping='ping -c 10'
 alias less='less -R'
 alias cls='clear'
 
+# Debian-family bat packages expose batcat; other platforms normally expose bat.
+# Keep paging disabled, but retain bat's header, grid, and line numbers so plain
+# text files are visibly rendered by bat in an interactive terminal.
+if command -v batcat >/dev/null 2>&1; then
+	alias cat='batcat --paging=never --style=full'
+elif command -v bat >/dev/null 2>&1; then
+	alias cat='bat --paging=never --style=full'
+fi
+
 if command -v trash-put >/dev/null 2>&1; then
 	alias rm='trash-put'
 elif command -v trash >/dev/null 2>&1; then
