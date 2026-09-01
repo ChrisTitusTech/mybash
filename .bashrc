@@ -389,6 +389,9 @@ docker-clean() {
 # alias to fix ~/.ssh permissions
 alias sshperms='cd ~ && chmod 600 ~/.ssh/* && chmod 700 ~/.ssh && chmod 644 ~/.ssh/*.pub'
 
+# delete those pesky Zone.Identifier files that happen with WSL
+alias unzone='find . -name "*:Zone.Identifier" -type f -delete'
+
 #######################################################
 # SPECIAL FUNCTIONS
 #######################################################
